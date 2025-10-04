@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context docBase="C:\Users\Aleks\Carrera\Carrera\6toSemestre\Metodologias Agiles\GR03_1BT2_622_25B\GR03_1BT2_622_25B\GR03_1BT2_622_25B\target\GR03_1BT2_622_25B1-1.0-SNAPSHOT" path="/GR03_1BT2_622_25B1">
+  <Resource auth="Container" driverClassName="org.postgresql.Driver" maxActive="20" maxIdle="10" maxWait="-1" name="jdbc/mydb" password="1234" type="javax.sql.DataSource" url="jdbc:postgresql://localhost:5432/postgres" username="postgres"/>
+</Context>
