@@ -4,10 +4,10 @@ import java.util.List;
 
 import com.app.model.Scan;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
-import jakarta.persistence.TypedQuery;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
+import javax.persistence.TypedQuery;
 
 public class ScanDAO {
     private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("AdminScanPU");
@@ -55,11 +55,16 @@ public class ScanDAO {
     public List<Scan> listarTodos() {
         EntityManager em = emf.createEntityManager();
         try {
-            return em.createQuery("SELECT s FROM Scan s", Scan.class).getResultList();
+            List<Scan> scans = em.createQuery("SELECT s FROM Scan s", Scan.class).getResultList();
+            for (Scan s : scans) {
+                s.getMangas().size(); // accede a la colección para inicializarla
+            }
+            return scans;
         } finally {
             em.close();
         }
     }
+
 
     public void actualizar(Scan scan) {
         EntityManager em = emf.createEntityManager();
