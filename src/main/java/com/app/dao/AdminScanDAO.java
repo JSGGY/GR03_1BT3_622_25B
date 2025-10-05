@@ -2,10 +2,7 @@ package com.app.dao;
 
 import com.app.model.AdminScan;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.NoResultException;
-import jakarta.persistence.Persistence;
+import javax.persistence.*;
 
 public class AdminScanDAO {
     private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("AdminScanPU");
@@ -13,7 +10,6 @@ public class AdminScanDAO {
     public AdminScan findByUsernameAndPassword(String username, String password) {
         EntityManager em = emf.createEntityManager();
         try {
-            // Corregir: usar 'contraseña' porque AdminScan hereda de Usuario
             return em.createQuery(
                 "SELECT a FROM AdminScan a WHERE a.username = :username AND a.contraseña = :password", 
                 AdminScan.class)
@@ -78,11 +74,7 @@ public class AdminScanDAO {
         EntityManager em = emf.createEntityManager();
         try {
             em.getTransaction().begin();
-            
-            // JPA/Hibernate maneja autom\u00e1ticamente la herencia
-            // Crear\u00e1 registros en ambas tablas: usuarios y admin_scan
             em.persist(adminScan);
-            
             em.getTransaction().commit();
             
             System.out.println("DEBUG: AdminScan guardado - ID: " + adminScan.getId() + 

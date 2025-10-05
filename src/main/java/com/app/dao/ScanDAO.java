@@ -4,10 +4,10 @@ import java.util.List;
 
 import com.app.model.Scan;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
-import jakarta.persistence.TypedQuery;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
+import javax.persistence.TypedQuery;
 
 public class ScanDAO {
     private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("AdminScanPU");
@@ -40,7 +40,6 @@ public class ScanDAO {
     public List<Scan> buscarPorAdminScan(int adminScanId) {
         EntityManager em = emf.createEntityManager();
         try {
-            // Usar LEFT JOIN FETCH para cargar mangas eagerly
             TypedQuery<Scan> query = em.createQuery(
                 "SELECT DISTINCT s FROM Scan s LEFT JOIN FETCH s.mangas WHERE s.creadoPor.id = :adminId", Scan.class);
             query.setParameter("adminId", adminScanId);
@@ -55,11 +54,16 @@ public class ScanDAO {
     public List<Scan> listarTodos() {
         EntityManager em = emf.createEntityManager();
         try {
-            return em.createQuery("SELECT s FROM Scan s", Scan.class).getResultList();
+            List<Scan> scans = em.createQuery("SELECT s FROM Scan s", Scan.class).getResultList();
+            for (Scan s : scans) {
+                s.getMangas().size();
+            }
+            return scans;
         } finally {
             em.close();
         }
     }
+
 
     public void actualizar(Scan scan) {
         EntityManager em = emf.createEntityManager();

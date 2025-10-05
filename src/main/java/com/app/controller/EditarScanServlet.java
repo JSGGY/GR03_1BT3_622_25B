@@ -9,20 +9,20 @@ import com.app.model.AdminScan;
 import com.app.model.Scan;
 import com.app.service.ScanService;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.MultipartConfig;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-import jakarta.servlet.http.Part;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.servlet.http.Part;
 
 @WebServlet("/editar-scan")
 @MultipartConfig(
-    fileSizeThreshold = 1024 * 1024 * 2,  // 2MB
-    maxFileSize = 1024 * 1024 * 10,       // 10MB
-    maxRequestSize = 1024 * 1024 * 50     // 50MB
+    fileSizeThreshold = 1024 * 1024 * 2,
+    maxFileSize = 1024 * 1024 * 10,
+    maxRequestSize = 1024 * 1024 * 50
 )
 public class EditarScanServlet extends HttpServlet {
     private final ScanService scanService = new ScanService();
@@ -53,15 +53,13 @@ public class EditarScanServlet extends HttpServlet {
             int scanId = Integer.parseInt(scanIdStr);
             
             if ("delete".equals(action)) {
-                // Eliminar scan
                 boolean eliminado = scanService.eliminarScan(scanId);
-                if (eliminado) {
+                if (eliminado)
                     System.out.println("DEBUG: Scan eliminado exitosamente - ID: " + scanId);
-                } else {
+                else
                     System.out.println("ERROR: No se pudo eliminar el scan - ID: " + scanId);
-                }
+
             } else if ("edit".equals(action)) {
-                // Editar scan
                 Scan scan = scanService.obtenerScanPorId(scanId);
                 if (scan == null || scan.getCreadoPor().getId() != adminScan.getId()) {
                     System.out.println("ERROR: Scan no encontrado o no autorizado - ID: " + scanId);
@@ -71,43 +69,32 @@ public class EditarScanServlet extends HttpServlet {
                 
                 String nombre = request.getParameter("nombre");
                 String descripcion = request.getParameter("descripcion");
-                
-                // Actualizar campos básicos
-                if (nombre != null && !nombre.trim().isEmpty()) {
+
+                if (nombre != null && !nombre.trim().isEmpty())
                     scan.setNombre(nombre);
-                }
-                if (descripcion != null) {
+                if (descripcion != null)
                     scan.setDescripcion(descripcion);
-                }
-                
-                // Manejar nueva imagen si se proporciona
+
                 try {
                     Part filePart = request.getPart("nuevaImagen");
                     if (filePart != null && filePart.getSize() > 0) {
                         String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
-                        
-                        // Validar que sea una imagen
                         String mimeType = filePart.getContentType();
                         if (mimeType != null && mimeType.startsWith("image/")) {
-                            // Generar nombre único
                             String fileExtension = fileName.substring(fileName.lastIndexOf("."));
                             String uniqueFileName = UUID.randomUUID().toString() + fileExtension;
-                            
-                            // Obtener ruta absoluta
+
                             String applicationPath = request.getServletContext().getRealPath("");
                             String uploadFilePath = applicationPath + File.separator + UPLOAD_DIR;
                             
-                            // Crear directorio si no existe
+
                             File uploadDir = new File(uploadFilePath);
                             if (!uploadDir.exists()) {
                                 uploadDir.mkdirs();
                             }
-                            
-                            // Guardar archivo
+
                             String filePath = uploadFilePath + File.separator + uniqueFileName;
                             filePart.write(filePath);
-                            
-                            // Actualizar URL en la entidad
                             String nuevaImagenUrl = UPLOAD_DIR.replace(File.separator, "/") + "/" + uniqueFileName;
                             scan.setImagenUrl(nuevaImagenUrl);
                             
@@ -117,14 +104,11 @@ public class EditarScanServlet extends HttpServlet {
                 } catch (Exception e) {
                     System.out.println("ERROR: Error al procesar nueva imagen: " + e.getMessage());
                 }
-                
-                // Guardar cambios
                 boolean actualizado = scanService.actualizarScan(scan);
-                if (actualizado) {
+                if (actualizado)
                     System.out.println("DEBUG: Scan actualizado exitosamente - ID: " + scanId);
-                } else {
+                else
                     System.out.println("ERROR: No se pudo actualizar el scan - ID: " + scanId);
-                }
             }
         } catch (NumberFormatException e) {
             System.out.println("ERROR: ID de scan inválido: " + scanIdStr);

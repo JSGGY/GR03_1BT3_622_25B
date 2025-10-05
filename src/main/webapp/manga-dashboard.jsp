@@ -10,16 +10,14 @@
     <div class="dashboard-container">
         <%
             com.app.model.Scan scan = (com.app.model.Scan) request.getAttribute("scan");
-            com.app.model.AdminScan adminScan = (com.app.model.AdminScan) request.getAttribute("adminScan");
             java.util.List<com.app.model.Manga> mangas = (java.util.List<com.app.model.Manga>) request.getAttribute("mangas");
-            
+
             String scanImagenUrl = scan.getImagenUrl();
             if (scanImagenUrl == null || scanImagenUrl.trim().isEmpty()) {
                 scanImagenUrl = "images/default-scan.svg";
             }
+
         %>
-        
-        <!-- Header del Scan -->
         <div class="scan-header">
             <div class="scan-info">
                 <div class="scan-image">
@@ -30,7 +28,6 @@
                     <p class="scan-description"><%= scan.getDescripcion() != null ? scan.getDescripcion() : "" %></p>
                     <div class="scan-stats">
                         <span class="stat">📚 <%= mangas != null ? mangas.size() : 0 %> Mangas</span>
-                        <span class="stat">👤 <%= adminScan.getUsername() %></span>
                     </div>
                 </div>
             </div>
@@ -39,24 +36,21 @@
                 <a href="dashboard" class="btn-secondary">← Volver al Dashboard</a>
             </div>
         </div>
-
-        <!-- Formulario para crear manga (oculto por defecto) -->
         <div id="createMangaForm" class="create-form hidden">
             <h3>Agregar Nuevo Manga</h3>
             <form action="manga" method="post" enctype="multipart/form-data">
                 <input type="hidden" name="action" value="create">
                 <input type="hidden" name="scanId" value="<%= scan.getId() %>">
-                
+
                 <div class="form-group">
                     <label for="titulo">Título del Manga:</label>
                     <input type="text" id="titulo" name="titulo" required>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="descripcion">Descripción:</label>
                     <textarea id="descripcion" name="descripcion" rows="4" placeholder="Describe brevemente el manga..."></textarea>
                 </div>
-                
                 <div class="form-group">
                     <label for="estado">Estado:</label>
                     <select id="estado" name="estado" required>
@@ -66,21 +60,18 @@
                         <option value="CANCELADO">Cancelado</option>
                     </select>
                 </div>
-                
                 <div class="form-group">
                     <label for="imagenPortada">Imagen de Portada:</label>
                     <input type="file" id="imagenPortada" name="imagenPortada" accept="image/*">
                     <small>Opcional. Formatos: JPG, PNG, GIF, WEBP. Máximo 10MB.</small>
                 </div>
-                
+
                 <div class="form-actions">
                     <button type="submit" class="btn-primary">Crear Manga</button>
                     <button type="button" class="btn-secondary" onclick="hideCreateMangaForm()">Cancelar</button>
                 </div>
             </form>
         </div>
-
-        <!-- Modal para editar manga -->
         <div id="editMangaModal" class="modal hidden">
             <div class="modal-content">
                 <div class="modal-header">
@@ -90,17 +81,17 @@
                 <form id="editMangaForm" action="manga" method="post" enctype="multipart/form-data">
                     <input type="hidden" name="action" value="edit">
                     <input type="hidden" id="editMangaId" name="mangaId">
-                    
+
                     <div class="form-group">
                         <label for="editTitulo">Título del Manga:</label>
                         <input type="text" id="editTitulo" name="titulo" required>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="editDescripcion">Descripción:</label>
                         <textarea id="editDescripcion" name="descripcion" rows="4"></textarea>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="editEstado">Estado:</label>
                         <select id="editEstado" name="estado" required>
@@ -110,20 +101,18 @@
                             <option value="CANCELADO">Cancelado</option>
                         </select>
                     </div>
-                    
                     <div class="form-group">
                         <label>Imagen actual:</label>
                         <div class="current-image">
                             <img id="currentMangaImage" src="" alt="Portada actual" style="max-width: 150px; border-radius: 8px;">
                         </div>
                     </div>
-                    
                     <div class="form-group">
                         <label for="nuevaImagenPortada">Cambiar portada (opcional):</label>
                         <input type="file" id="nuevaImagenPortada" name="nuevaImagenPortada" accept="image/*">
                         <small>Si no seleccionas nada, se mantendrá la portada actual.</small>
                     </div>
-                    
+
                     <div class="form-actions">
                         <button type="submit" class="btn-primary">Guardar Cambios</button>
                         <button type="button" class="btn-secondary" onclick="cerrarModalEditarManga()">Cancelar</button>
@@ -131,11 +120,8 @@
                 </form>
             </div>
         </div>
-
-        <!-- Lista de mangas -->
         <div class="mangas-container">
             <h2>Mangas de este Scan</h2>
-            
             <div class="mangas-grid">
                 <%
                 if (mangas != null && !mangas.isEmpty()) {
@@ -144,7 +130,7 @@
                         if (imagenPortada == null || imagenPortada.trim().isEmpty()) {
                             imagenPortada = "images/default-scan.svg";
                         }
-                        
+
                         String estadoClase = "";
                         String estadoTexto = "";
                         switch (manga.getEstado()) {
@@ -168,8 +154,8 @@
                 %>
                     <div class="manga-card">
                         <div class="card-image">
-                            <img src="<%= imagenPortada %>" 
-                                 alt="<%= manga.getTitulo() %>" 
+                            <img src="<%= imagenPortada %>"
+                                 alt="<%= manga.getTitulo() %>"
                                  onerror="this.src='images/default-scan.svg'">
                             <div class="manga-estado <%= estadoClase %>">
                                 <%= estadoTexto %>
@@ -193,16 +179,17 @@
                             </div>
                         </div>
                         <div class="card-actions">
-                            <button class="btn-primary btn-small">Ver Capítulos</button>
-                            <button class="btn-secondary btn-small" 
-                                    data-manga-id="<%= manga.getId() %>" 
-                                    data-manga-titulo="<%= manga.getTitulo() %>" 
-                                    data-manga-descripcion="<%= manga.getDescripcion() != null ? manga.getDescripcion() : "" %>" 
+                            <<a href="mostrarCapitulos?mangaId=<%= manga.getId() %>&scanId=<%= scan.getId() %>"
+                                class="btn-primary btn-small">Ver Capítulos</a>
+                            <button class="btn-secondary btn-small"
+                                    data-manga-id="<%= manga.getId() %>"
+                                    data-manga-titulo="<%= manga.getTitulo() %>"
+                                    data-manga-descripcion="<%= manga.getDescripcion() != null ? manga.getDescripcion() : "" %>"
                                     data-manga-estado="<%= manga.getEstado() %>"
                                     data-manga-imagen="<%= manga.getImagenPortada() != null ? manga.getImagenPortada() : "" %>"
                                     onclick="editarMangaData(this)">Editar</button>
-                            <button class="btn-danger btn-small" 
-                                    data-manga-id="<%= manga.getId() %>" 
+                            <button class="btn-danger btn-small"
+                                    data-manga-id="<%= manga.getId() %>"
                                     data-manga-titulo="<%= manga.getTitulo() %>"
                                     onclick="eliminarMangaData(this)">Eliminar</button>
                         </div>
@@ -220,8 +207,6 @@
                 %>
             </div>
         </div>
-        
-        <!-- Mensajes de error -->
         <% if (request.getAttribute("error") != null) { %>
             <div class="error-message">
                 <%= request.getAttribute("error") %>
@@ -233,23 +218,23 @@
         function showCreateMangaForm() {
             document.getElementById('createMangaForm').classList.remove('hidden');
         }
-        
+
         function hideCreateMangaForm() {
             document.getElementById('createMangaForm').classList.add('hidden');
         }
-        
+
         function editarMangaData(button) {
             const id = button.getAttribute('data-manga-id');
             const titulo = button.getAttribute('data-manga-titulo');
             const descripcion = button.getAttribute('data-manga-descripcion');
             const estado = button.getAttribute('data-manga-estado');
             const imagenUrl = button.getAttribute('data-manga-imagen');
-            
+
             document.getElementById('editMangaId').value = id;
             document.getElementById('editTitulo').value = titulo;
             document.getElementById('editDescripcion').value = descripcion;
             document.getElementById('editEstado').value = estado;
-            
+
             const currentImage = document.getElementById('currentMangaImage');
             if (imagenUrl && imagenUrl.trim() !== '') {
                 currentImage.src = imagenUrl;
@@ -258,42 +243,40 @@
                 currentImage.src = 'images/default-scan.svg';
                 currentImage.style.display = 'block';
             }
-            
+
             document.getElementById('editMangaModal').classList.remove('hidden');
         }
-        
+
         function cerrarModalEditarManga() {
             document.getElementById('editMangaModal').classList.add('hidden');
             document.getElementById('editMangaForm').reset();
         }
-        
+
         function eliminarMangaData(button) {
             const id = button.getAttribute('data-manga-id');
             const titulo = button.getAttribute('data-manga-titulo');
-            
+
             if (confirm('¿Estás seguro de que quieres eliminar el manga "' + titulo + '"?\n\nEsta acción no se puede deshacer y eliminará todos los capítulos asociados.')) {
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = 'manga';
-                
+
                 const mangaIdInput = document.createElement('input');
                 mangaIdInput.type = 'hidden';
                 mangaIdInput.name = 'mangaId';
                 mangaIdInput.value = id;
-                
+
                 const actionInput = document.createElement('input');
                 actionInput.type = 'hidden';
                 actionInput.name = 'action';
                 actionInput.value = 'delete';
-                
+
                 form.appendChild(mangaIdInput);
                 form.appendChild(actionInput);
                 document.body.appendChild(form);
                 form.submit();
             }
         }
-        
-        // Cerrar modal al hacer click fuera de él
         window.onclick = function(event) {
             const modal = document.getElementById('editMangaModal');
             if (event.target == modal) {

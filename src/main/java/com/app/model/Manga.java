@@ -3,19 +3,7 @@ package com.app.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import javax.persistence.*;
 
 @Entity
 @Table(name = "mangas")
@@ -44,7 +32,7 @@ public class Manga {
     @OneToMany(mappedBy = "manga", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Capitulo> capitulos = new ArrayList<>();
     
-    // Getters y Setters
+
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
     
@@ -70,12 +58,11 @@ public class Manga {
         this.estado = nuevoEstado;
     }
     
-    // Métodos de utilidad
+
     public int getTotalCapitulos() {
         try {
             return capitulos != null ? capitulos.size() : 0;
         } catch (Exception e) {
-            // En caso de lazy loading exception, retornamos 0
             return 0;
         }
     }

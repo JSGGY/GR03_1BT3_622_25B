@@ -5,10 +5,10 @@ import java.util.List;
 import com.app.model.Manga;
 import com.app.model.Scan;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
-import jakarta.persistence.TypedQuery;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
+import javax.persistence.TypedQuery;
 
 public class MangaDAO {
     private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("AdminScanPU");
@@ -55,12 +55,12 @@ public class MangaDAO {
             em.close();
         }
     }
-    
+
     public List<Manga> buscarPorScanId(int scanId) {
         EntityManager em = emf.createEntityManager();
         try {
             TypedQuery<Manga> query = em.createQuery(
-                "SELECT DISTINCT m FROM Manga m LEFT JOIN FETCH m.capitulos WHERE m.scan.id = :scanId ORDER BY m.titulo", 
+                "SELECT DISTINCT m FROM Manga m LEFT JOIN FETCH m.capitulos WHERE m.scan.id = :scanId ORDER BY m.titulo",
                 Manga.class
             );
             query.setParameter("scanId", scanId);
@@ -69,7 +69,7 @@ public class MangaDAO {
             em.close();
         }
     }
-    
+
     public List<Manga> obtenerTodos() {
         EntityManager em = emf.createEntityManager();
         try {

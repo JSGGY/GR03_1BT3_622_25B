@@ -55,7 +55,6 @@ public class ScanService {
 
     public boolean eliminarScan(int id) {
         try {
-            // Verificar que el scan existe antes de eliminar
             Scan scan = scanDAO.buscarPorId(id);
             if (scan == null) {
                 System.out.println("ERROR: Scan no encontrado para eliminar - ID: " + id);

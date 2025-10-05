@@ -1,18 +1,17 @@
 package com.app.controller;
 
-import java.io.IOException;
-import java.util.List;
-
 import com.app.model.AdminScan;
 import com.app.model.Scan;
 import com.app.service.ScanService;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.io.IOException;
+import java.util.List;
 
 @WebServlet("/dashboard")
 public class DashboardServlet extends HttpServlet {
@@ -26,18 +25,18 @@ public class DashboardServlet extends HttpServlet {
         AdminScan adminScan = (AdminScan) session.getAttribute("adminScan");
         
         if (adminScan == null) {
-            System.out.println("DEBUG: No hay AdminScan en sesión, redirigiendo al login");
+            System.out.println("DEBUG: No hay AdminScan en sesiOn, redirigiendo al login");
             response.sendRedirect(request.getContextPath() + "/index.jsp");
             return;
         }
         
         System.out.println("DEBUG: AdminScan ID: " + adminScan.getId() + ", Username: " + adminScan.getUsername());
         
-        // Obtener scans del admin
+
         List<Scan> scans = scanService.obtenerScansPorAdmin(adminScan.getId());
         System.out.println("DEBUG: Scans obtenidos: " + scans.size());
         
-        // Debug adicional de cada scan
+
         for (Scan scan : scans) {
             System.out.println("  - Scan: " + scan.getNombre() + " (ID: " + scan.getId() + ")");
         }
@@ -45,7 +44,7 @@ public class DashboardServlet extends HttpServlet {
         request.setAttribute("scans", scans);
         request.setAttribute("adminScan", adminScan);
         
-        // Verificar que los atributos se establecieron correctamente
+
         System.out.println("DEBUG: Atributos establecidos - scans: " + request.getAttribute("scans"));
         System.out.println("DEBUG: Atributos establecidos - adminScan: " + request.getAttribute("adminScan"));
         
