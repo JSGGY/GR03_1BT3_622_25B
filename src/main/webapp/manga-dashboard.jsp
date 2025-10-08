@@ -31,7 +31,7 @@
                 </div>
             </div>
             <div class="header-actions">
-                <button class="btn-primary" onclick="showCreateMangaForm()">+ Agregar Manga</button>
+                <button class="btn-primary" onclick="showCreateMangaForm()">+ Agregar Manga.</button>
                 <a href="dashboard" class="btn-secondary">← Volver al Dashboard</a>
             </div>
         </div>
