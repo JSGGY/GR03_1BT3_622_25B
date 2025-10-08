@@ -2,7 +2,10 @@ package com.app.dao;
 
 import com.app.model.AdminScan;
 
-import javax.persistence.*;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.Persistence;
 
 public class AdminScanDAO {
     private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("AdminScanPU");

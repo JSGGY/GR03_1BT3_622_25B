@@ -8,11 +8,11 @@ import com.app.dao.ScanDAO;
 import com.app.model.Manga;
 import com.app.model.Scan;
 
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @WebServlet("/mangaInvitados")
 public class MangaInvitadoServlet extends HttpServlet {
@@ -37,7 +37,7 @@ public class MangaInvitadoServlet extends HttpServlet {
 
             Scan scan = scanDAO.buscarPorId(scanId);
             if (scan == null) {
-                response.sendRedirect("dashboard-invitado");
+                response.sendRedirect("ingresoInvitado");
                 return;
             }
 
@@ -47,11 +47,11 @@ public class MangaInvitadoServlet extends HttpServlet {
             request.setAttribute("mangas", mangas);
             request.setAttribute("id", scanId);
 
-
-            request.getRequestDispatcher("manga-dashboard.jsp").forward(request, response);
+            // Redirigir al JSP específico para invitados
+            request.getRequestDispatcher("manga-invitados.jsp").forward(request, response);
 
         } catch (NumberFormatException e) {
-            response.sendRedirect("dashboard-invitado");
+            response.sendRedirect("ingresoInvitado");
         }
     }
 }

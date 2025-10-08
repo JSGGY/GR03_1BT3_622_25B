@@ -1,5 +1,4 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <html>
 <head>
     <title>Dashboard - <%= request.getAttribute("scan") != null ? ((com.app.model.Scan) request.getAttribute("scan")).getNombre() : "Manga" %></title>
@@ -120,6 +119,48 @@
                 </form>
             </div>
         </div>
+        
+        <!-- Modal para crear capítulo -->
+        <div id="createCapituloModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Crear Nuevo Capítulo</h3>
+                    <button class="close-btn" onclick="hideCreateCapituloForm()">&times;</button>
+                </div>
+                <form id="createCapituloForm" action="capitulo" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="action" value="create">
+                    <input type="hidden" id="capituloMangaId" name="mangaId">
+                    <input type="hidden" id="capituloScanId" name="scanId" value="<%= scan.getId() %>">
+
+                    <div class="form-group">
+                        <label for="numeroCapitulo">Número de Capítulo:</label>
+                        <input type="number" id="numeroCapitulo" name="numero" min="1" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tituloCapitulo">Título del Capítulo:</label>
+                        <input type="text" id="tituloCapitulo" name="titulo" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="descripcionCapitulo">Descripción:</label>
+                        <textarea id="descripcionCapitulo" name="descripcion" rows="3" placeholder="Descripción opcional del capítulo"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="imagenesCapitulo">Páginas del Capítulo:</label>
+                        <input type="file" id="imagenesCapitulo" name="imagenes" multiple accept="image/*" required>
+                        <small>Selecciona las páginas del capítulo en orden. Formatos: JPG, PNG, WEBP</small>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Crear Capítulo</button>
+                        <button type="button" class="btn-secondary" onclick="hideCreateCapituloForm()">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
         <div class="mangas-container">
             <h2>Mangas de este Scan</h2>
             <div class="mangas-grid">
@@ -179,8 +220,12 @@
                             </div>
                         </div>
                         <div class="card-actions">
-                            <<a href="mostrarCapitulos?mangaId=<%= manga.getId() %>&scanId=<%= scan.getId() %>"
+                            <a href="mostrarCapitulos?mangaId=<%= manga.getId() %>&scanId=<%= scan.getId() %>"
                                 class="btn-primary btn-small">Ver Capítulos</a>
+                            <button class="btn-success btn-small"
+                                    data-manga-id="<%= manga.getId() %>"
+                                    data-manga-titulo="<%= manga.getTitulo() %>"
+                                    onclick="showCreateCapituloForm(this)">+ Capítulo</button>
                             <button class="btn-secondary btn-small"
                                     data-manga-id="<%= manga.getId() %>"
                                     data-manga-titulo="<%= manga.getTitulo() %>"
@@ -277,10 +322,32 @@
                 form.submit();
             }
         }
+
+        // Funciones para el modal de crear capítulo
+        function showCreateCapituloForm(button) {
+            const mangaId = button.getAttribute('data-manga-id');
+            const mangaTitulo = button.getAttribute('data-manga-titulo');
+            
+            document.getElementById('capituloMangaId').value = mangaId;
+            document.querySelector('#createCapituloModal .modal-header h3').textContent = 'Crear Nuevo Capítulo para "' + mangaTitulo + '"';
+            document.getElementById('createCapituloModal').classList.remove('hidden');
+        }
+
+        function hideCreateCapituloForm() {
+            document.getElementById('createCapituloModal').classList.add('hidden');
+            document.getElementById('createCapituloForm').reset();
+        }
+        
         window.onclick = function(event) {
-            const modal = document.getElementById('editMangaModal');
-            if (event.target == modal) {
+            const editModal = document.getElementById('editMangaModal');
+            const createCapituloModal = document.getElementById('createCapituloModal');
+            
+            if (event.target == editModal) {
                 cerrarModalEditarManga();
+            }
+            
+            if (event.target == createCapituloModal) {
+                hideCreateCapituloForm();
             }
         }
     </script>

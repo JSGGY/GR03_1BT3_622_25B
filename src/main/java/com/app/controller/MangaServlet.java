@@ -1,12 +1,7 @@
 package com.app.controller;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
-import java.util.UUID;
 
 import com.app.dao.MangaDAO;
 import com.app.dao.ScanDAO;
@@ -15,14 +10,13 @@ import com.app.model.EstadoManga;
 import com.app.model.Manga;
 import com.app.model.Scan;
 
-import javax.servlet.ServletException;
-import javax.servlet.annotation.MultipartConfig;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.Part;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 @WebServlet("/manga")
 @MultipartConfig(
@@ -40,6 +34,38 @@ public class MangaServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         obtenerInfo(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("adminScan") == null) {
+            response.sendRedirect("index.jsp");
+            return;
+        }
+
+        String action = request.getParameter("action");
+        if (action == null) {
+            response.sendRedirect("dashboard");
+            return;
+        }
+
+        switch (action) {
+            case "create":
+                crearManga(request, response);
+                break;
+            case "edit":
+                editarManga(request, response);
+                break;
+            case "delete":
+                eliminarManga(request, response);
+                break;
+            default:
+                response.sendRedirect("dashboard");
+                break;
+        }
     }
 
     private void obtenerInfo(HttpServletRequest request, HttpServletResponse response)
@@ -77,6 +103,153 @@ public class MangaServlet extends HttpServlet {
 
             request.getRequestDispatcher("manga-dashboard.jsp").forward(request, response);
 
+        } catch (NumberFormatException e) {
+            response.sendRedirect("dashboard");
+        }
+    }
+
+    private void crearManga(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
+        AdminScan adminScan = (AdminScan) request.getSession().getAttribute("adminScan");
+        String scanIdParam = request.getParameter("scanId");
+        
+        try {
+            int scanId = Integer.parseInt(scanIdParam);
+            Scan scan = scanDAO.buscarPorId(scanId);
+            
+            if (scan == null || scan.getCreadoPor().getId() != adminScan.getId()) {
+                response.sendRedirect("dashboard");
+                return;
+            }
+            
+            String titulo = request.getParameter("titulo");
+            String descripcion = request.getParameter("descripcion");
+            String estadoParam = request.getParameter("estado");
+            
+            if (titulo == null || titulo.trim().isEmpty()) {
+                request.setAttribute("error", "El título es requerido");
+                obtenerInfo(request, response);
+                return;
+            }
+            
+            // Crear nuevo manga
+            Manga nuevoManga = new Manga();
+            nuevoManga.setTitulo(titulo);
+            nuevoManga.setDescripcion(descripcion);
+            nuevoManga.setScan(scan);
+            
+            // Establecer estado
+            if (estadoParam != null) {
+                try {
+                    nuevoManga.setEstado(EstadoManga.valueOf(estadoParam));
+                } catch (IllegalArgumentException e) {
+                    nuevoManga.setEstado(EstadoManga.EN_PROGRESO);
+                }
+            } else {
+                nuevoManga.setEstado(EstadoManga.EN_PROGRESO);
+            }
+            
+            // TODO: Manejar subida de imagen de portada
+            
+            // Guardar manga
+            boolean guardado = mangaDAO.guardar(nuevoManga);
+            
+            if (guardado) {
+                System.out.println("DEBUG: Manga creado exitosamente: " + titulo);
+            } else {
+                request.setAttribute("error", "Error al crear el manga");
+            }
+            
+            // Redirigir de vuelta al manga dashboard
+            response.sendRedirect("manga?scanId=" + scanId);
+            
+        } catch (NumberFormatException e) {
+            response.sendRedirect("dashboard");
+        }
+    }
+
+    private void editarManga(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
+        AdminScan adminScan = (AdminScan) request.getSession().getAttribute("adminScan");
+        String mangaIdParam = request.getParameter("mangaId");
+        
+        try {
+            int mangaId = Integer.parseInt(mangaIdParam);
+            Manga manga = mangaDAO.buscarPorId(mangaId);
+            
+            if (manga == null || manga.getScan().getCreadoPor().getId() != adminScan.getId()) {
+                response.sendRedirect("dashboard");
+                return;
+            }
+            
+            String titulo = request.getParameter("titulo");
+            String descripcion = request.getParameter("descripcion");
+            String estadoParam = request.getParameter("estado");
+            
+            if (titulo != null && !titulo.trim().isEmpty()) {
+                manga.setTitulo(titulo);
+            }
+            manga.setDescripcion(descripcion);
+            
+            // Establecer estado
+            if (estadoParam != null) {
+                try {
+                    manga.setEstado(EstadoManga.valueOf(estadoParam));
+                } catch (IllegalArgumentException e) {
+                    // Mantener el estado actual si es inválido
+                }
+            }
+            
+            // TODO: Manejar actualización de imagen de portada
+            
+            // Actualizar manga
+            boolean actualizado = mangaDAO.guardar(manga);
+            
+            if (actualizado) {
+                System.out.println("DEBUG: Manga actualizado exitosamente: " + titulo);
+            } else {
+                request.setAttribute("error", "Error al actualizar el manga");
+            }
+            
+            // Redirigir de vuelta al manga dashboard
+            response.sendRedirect("manga?scanId=" + manga.getScan().getId());
+            
+        } catch (NumberFormatException e) {
+            response.sendRedirect("dashboard");
+        }
+    }
+
+    private void eliminarManga(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
+        AdminScan adminScan = (AdminScan) request.getSession().getAttribute("adminScan");
+        String mangaIdParam = request.getParameter("mangaId");
+        
+        try {
+            int mangaId = Integer.parseInt(mangaIdParam);
+            Manga manga = mangaDAO.buscarPorId(mangaId);
+            
+            if (manga == null || manga.getScan().getCreadoPor().getId() != adminScan.getId()) {
+                response.sendRedirect("dashboard");
+                return;
+            }
+            
+            int scanId = manga.getScan().getId();
+            
+            // Eliminar manga
+            boolean eliminado = mangaDAO.eliminar(mangaId);
+            
+            if (eliminado) {
+                System.out.println("DEBUG: Manga eliminado exitosamente: " + manga.getTitulo());
+            } else {
+                request.setAttribute("error", "Error al eliminar el manga");
+            }
+            
+            // Redirigir de vuelta al manga dashboard
+            response.sendRedirect("manga?scanId=" + scanId);
+            
         } catch (NumberFormatException e) {
             response.sendRedirect("dashboard");
         }

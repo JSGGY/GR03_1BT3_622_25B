@@ -1,13 +1,15 @@
 package com.app.controller;
 
+import java.io.IOException;
+
 import com.app.dao.CapituloDAO;
 import com.app.model.Capitulo;
 
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.*;
-import java.io.IOException;
-import java.util.List;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @WebServlet("/seleccionarCapitulo")
 public class visorCapituloServlet extends HttpServlet {
@@ -24,6 +26,7 @@ public class visorCapituloServlet extends HttpServlet {
 
         String capituloIdParam = request.getParameter("capituloId");
         String mangaIdParam = request.getParameter("mangaId");
+        String scanIdParam = request.getParameter("scanId");
 
         if (capituloIdParam == null || capituloIdParam.isEmpty()) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Falta el parámetro capituloId");
@@ -45,7 +48,21 @@ public class visorCapituloServlet extends HttpServlet {
         }
         request.setAttribute("capituloId", capituloIdParam);
         request.setAttribute("capitulo", capitulo);
-        request.setAttribute("mangaId", mangaIdParam);
+        
+        // Convert mangaId to Integer if it's not null
+        if (mangaIdParam != null && !mangaIdParam.isEmpty()) {
+            try {
+                Integer mangaId = Integer.parseInt(mangaIdParam);
+                request.setAttribute("mangaId", mangaId);
+            } catch (NumberFormatException e) {
+                request.setAttribute("mangaId", null);
+            }
+        } else {
+            request.setAttribute("mangaId", null);
+        }
+        
+        // Pass scanId as String
+        request.setAttribute("scanId", scanIdParam);
 
         request.getRequestDispatcher("capituloVisor-dashboard.jsp").forward(request, response);
     }

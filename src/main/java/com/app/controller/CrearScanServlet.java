@@ -9,14 +9,14 @@ import com.app.model.AdminScan;
 import com.app.model.Scan;
 import com.app.service.ScanService;
 
-import javax.servlet.ServletException;
-import javax.servlet.annotation.MultipartConfig;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.Part;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.Part;
 
 @WebServlet("/crear-scan")
 @MultipartConfig(
@@ -27,6 +27,13 @@ import javax.servlet.http.Part;
 public class CrearScanServlet extends HttpServlet {
     private ScanService scanService = new ScanService();
     private static final String UPLOAD_DIR = "images" + File.separator + "scans";
+    
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        // Redirigir al dashboard si acceden directamente a la URL
+        response.sendRedirect(request.getContextPath() + "/dashboard");
+    }
     
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 

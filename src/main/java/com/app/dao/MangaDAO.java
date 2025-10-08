@@ -5,10 +5,10 @@ import java.util.List;
 import com.app.model.Manga;
 import com.app.model.Scan;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-import javax.persistence.TypedQuery;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
+import jakarta.persistence.TypedQuery;
 
 public class MangaDAO {
     private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("AdminScanPU");
