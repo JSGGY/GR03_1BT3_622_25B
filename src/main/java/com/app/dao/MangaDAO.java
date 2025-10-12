@@ -17,16 +17,21 @@ public class MangaDAO {
         EntityManager em = emf.createEntityManager();
         try {
             em.getTransaction().begin();
+            
             if (manga.getId() == 0) {
                 em.persist(manga);
             } else {
                 em.merge(manga);
             }
+            
             em.getTransaction().commit();
             return true;
         } catch (Exception e) {
-            em.getTransaction().rollback();
-            e.printStackTrace();
+            System.err.println("ERROR MangaDAO: Falló al guardar manga '" + manga.getTitulo() + "': " + e.getMessage());
+            
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
             return false;
         } finally {
             em.close();

@@ -84,10 +84,14 @@ public class CrearScanServlet extends HttpServlet {
             System.out.println("ERROR: Error al procesar imagen: " + e.getMessage());
             e.printStackTrace();
         }
-        if (nombre != null && !nombre.trim().isEmpty()) {
+        boolean nombreValido = nombre != null && !nombre.trim().isEmpty();
+        
+        if (nombreValido) {
             Scan nuevoScan = scanService.crearScan(nombre, descripcion, imagenUrl, adminScan);
             
-            if (nuevoScan != null) {
+            boolean scanCreadoExitosamente = nuevoScan != null;
+            
+            if (scanCreadoExitosamente) {
                 System.out.println("DEBUG: Scan creado exitosamente con imagen: " + imagenUrl);
             } else {
                 System.out.println("ERROR: No se pudo crear el scan");

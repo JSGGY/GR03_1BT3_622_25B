@@ -107,8 +107,8 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="nuevaImagenPortada">Cambiar portada (opcional):</label>
-                        <input type="file" id="nuevaImagenPortada" name="nuevaImagenPortada" accept="image/*">
+                        <label for="imagenPortada">Cambiar portada (opcional):</label>
+                        <input type="file" id="imagenPortada" name="imagenPortada" accept="image/*">
                         <small>Si no seleccionas nada, se mantendrá la portada actual.</small>
                     </div>
 
@@ -167,8 +167,11 @@
                 <%
                 if (mangas != null && !mangas.isEmpty()) {
                     for (com.app.model.Manga manga : mangas) {
-                        String imagenPortada = manga.getImagenPortada();
-                        if (imagenPortada == null || imagenPortada.trim().isEmpty()) {
+                        String imagenPortada;
+                        // Priorizar BLOB sobre URL legacy
+                        if (manga.getPortadaBlob() != null && manga.getPortadaBlob().length > 0) {
+                            imagenPortada = "imagen/manga/" + manga.getId();
+                        } else {
                             imagenPortada = "images/default-scan.svg";
                         }
 
@@ -231,7 +234,7 @@
                                     data-manga-titulo="<%= manga.getTitulo() %>"
                                     data-manga-descripcion="<%= manga.getDescripcion() != null ? manga.getDescripcion() : "" %>"
                                     data-manga-estado="<%= manga.getEstado() %>"
-                                    data-manga-imagen="<%= manga.getImagenPortada() != null ? manga.getImagenPortada() : "" %>"
+                                    data-manga-imagen="<%= imagenPortada %>"
                                     onclick="editarMangaData(this)">Editar</button>
                             <button class="btn-danger btn-small"
                                     data-manga-id="<%= manga.getId() %>"

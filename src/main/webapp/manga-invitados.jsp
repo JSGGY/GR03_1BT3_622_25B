@@ -40,8 +40,11 @@
                 <%
                 if (mangas != null && !mangas.isEmpty()) {
                     for (com.app.model.Manga manga : mangas) {
-                        String imagenPortada = manga.getImagenPortada();
-                        if (imagenPortada == null || imagenPortada.trim().isEmpty()) {
+                        String imagenPortada;
+                        // Priorizar BLOB sobre URL legacy
+                        if (manga.getPortadaBlob() != null && manga.getPortadaBlob().length > 0) {
+                            imagenPortada = "imagen/manga/" + manga.getId();
+                        } else {
                             imagenPortada = "images/default-scan.svg";
                         }
 

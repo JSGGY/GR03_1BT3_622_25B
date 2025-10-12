@@ -1,6 +1,8 @@
 package com.app.controller;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Paths;
 import java.util.List;
 
 import com.app.dao.MangaDAO;
@@ -17,6 +19,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.Part;
 
 @WebServlet("/manga")
 @MultipartConfig(
@@ -150,14 +153,14 @@ public class MangaServlet extends HttpServlet {
                 nuevoManga.setEstado(EstadoManga.EN_PROGRESO);
             }
             
-            // TODO: Manejar subida de imagen de portada
+            // Manejar subida de imagen de portada
+            procesarImagenPortada(request, nuevoManga);
             
             // Guardar manga
             boolean guardado = mangaDAO.guardar(nuevoManga);
             
-            if (guardado) {
-                System.out.println("DEBUG: Manga creado exitosamente: " + titulo);
-            } else {
+            if (!guardado) {
+                System.err.println("ERROR: Falló al guardar el manga: " + titulo);
                 request.setAttribute("error", "Error al crear el manga");
             }
             
@@ -202,14 +205,13 @@ public class MangaServlet extends HttpServlet {
                 }
             }
             
-            // TODO: Manejar actualización de imagen de portada
+            // Manejar actualización de imagen de portada
+            procesarImagenPortada(request, manga);
             
             // Actualizar manga
             boolean actualizado = mangaDAO.guardar(manga);
             
-            if (actualizado) {
-                System.out.println("DEBUG: Manga actualizado exitosamente: " + titulo);
-            } else {
+            if (!actualizado) {
                 request.setAttribute("error", "Error al actualizar el manga");
             }
             
@@ -241,9 +243,7 @@ public class MangaServlet extends HttpServlet {
             // Eliminar manga
             boolean eliminado = mangaDAO.eliminar(mangaId);
             
-            if (eliminado) {
-                System.out.println("DEBUG: Manga eliminado exitosamente: " + manga.getTitulo());
-            } else {
+            if (!eliminado) {
                 request.setAttribute("error", "Error al eliminar el manga");
             }
             
@@ -252,6 +252,48 @@ public class MangaServlet extends HttpServlet {
             
         } catch (NumberFormatException e) {
             response.sendRedirect("dashboard");
+        }
+    }
+
+    private void procesarImagenPortada(HttpServletRequest request, Manga manga) {
+        try {
+            Part filePart = request.getPart("imagenPortada");
+            
+            if (filePart != null) {
+                long fileSize = filePart.getSize();
+                String fileName = filePart.getSubmittedFileName();
+                String mimeType = filePart.getContentType();
+                
+                if (fileSize > 0) {
+                    if (fileName != null && !fileName.trim().isEmpty()) {
+                        fileName = Paths.get(fileName).getFileName().toString();
+                        
+                        // Validar que sea una imagen válida
+                        if (com.app.util.ImagenUtil.validarImagen(mimeType, fileSize)) {
+                            // Leer los bytes de la imagen
+                            try (InputStream inputStream = filePart.getInputStream()) {
+                                byte[] imageBytes = inputStream.readAllBytes();
+                                
+                                // Verificar que se leyeron bytes
+                                if (imageBytes != null && imageBytes.length > 0) {
+                                    // Guardar en BLOB
+                                    manga.setPortadaBlob(imageBytes);
+                                    manga.setPortadaTipo(mimeType);
+                                    manga.setPortadaNombre(fileName);
+                                    
+                                    System.out.println("DEBUG: Imagen procesada - " + fileName + " (" + imageBytes.length + " bytes)");
+                                } else {
+                                    System.err.println("ERROR: No se pudieron leer bytes de la imagen");
+                                }
+                            }
+                        } else {
+                            System.err.println("ERROR: Imagen inválida - " + fileName + " (Tipo: " + mimeType + ", Tamaño: " + fileSize + " bytes)");
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("ERROR al procesar imagen de portada: " + e.getMessage());
         }
     }
 

@@ -60,12 +60,13 @@ public class EditarScanServlet extends HttpServlet {
                     System.out.println("ERROR: No se pudo eliminar el scan - ID: " + scanId);
 
             } else if ("edit".equals(action)) {
-                Scan scan = scanService.obtenerScanPorId(scanId);
-                if (scan == null || scan.getCreadoPor().getId() != adminScan.getId()) {
+                if (!tieneAccesoAlScan(scanId, adminScan)) {
                     System.out.println("ERROR: Scan no encontrado o no autorizado - ID: " + scanId);
                     response.sendRedirect(request.getContextPath() + "/dashboard");
                     return;
                 }
+                
+                Scan scan = scanService.obtenerScanPorId(scanId);
                 
                 String nombre = request.getParameter("nombre");
                 String descripcion = request.getParameter("descripcion");
@@ -118,5 +119,10 @@ public class EditarScanServlet extends HttpServlet {
         }
         
         response.sendRedirect(request.getContextPath() + "/dashboard");
+    }
+    
+    private boolean tieneAccesoAlScan(int scanId, AdminScan adminScan) {
+        Scan scan = scanService.obtenerScanPorId(scanId);
+        return scan != null && scan.getCreadoPor().getId() == adminScan.getId();
     }
 }

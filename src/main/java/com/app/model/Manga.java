@@ -13,6 +13,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -30,8 +31,16 @@ public class Manga {
     @Column(length = 1000)
     private String descripcion;
     
-    @Column(name = "imagen_portada")
-    private String imagenPortada;
+    
+    @Lob
+    @Column(name = "portada_blob", columnDefinition = "MEDIUMBLOB")
+    private byte[] portadaBlob;
+    
+    @Column(name = "portada_tipo", length = 50)
+    private String portadaTipo;
+    
+    @Column(name = "portada_nombre")
+    private String portadaNombre;
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -60,8 +69,15 @@ public class Manga {
     public Scan getScan() { return scan; }
     public void setScan(Scan scan) { this.scan = scan; }
     
-    public String getImagenPortada() { return imagenPortada; }
-    public void setImagenPortada(String imagenPortada) { this.imagenPortada = imagenPortada; }
+
+    public byte[] getPortadaBlob() { return portadaBlob; }
+    public void setPortadaBlob(byte[] portadaBlob) { this.portadaBlob = portadaBlob; }
+    
+    public String getPortadaTipo() { return portadaTipo; }
+    public void setPortadaTipo(String portadaTipo) { this.portadaTipo = portadaTipo; }
+    
+    public String getPortadaNombre() { return portadaNombre; }
+    public void setPortadaNombre(String portadaNombre) { this.portadaNombre = portadaNombre; }
     
     public List<Capitulo> getCapitulos() { return capitulos; }
     public void setCapitulos(List<Capitulo> capitulos) { this.capitulos = capitulos; }
