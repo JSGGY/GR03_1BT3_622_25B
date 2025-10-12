@@ -173,17 +173,14 @@ public class MangaServlet extends HttpServlet {
             throws ServletException, IOException {
         
         AdminScan adminScan = (AdminScan) request.getSession().getAttribute("adminScan");
-        String mangaIdParam = request.getParameter("mangaId");
         
         try {
-            int mangaId = Integer.parseInt(mangaIdParam);
-            Manga manga = mangaDAO.buscarPorId(mangaId);
-            
-            if (manga == null || manga.getScan().getCreadoPor().getId() != adminScan.getId()) {
+            Manga manga = obtenerMangaSeguro(request, adminScan);
+            if (manga == null) {
                 response.sendRedirect("dashboard");
                 return;
             }
-            
+
             String titulo = request.getParameter("titulo");
             String descripcion = request.getParameter("descripcion");
             String estadoParam = request.getParameter("estado");
@@ -225,13 +222,10 @@ public class MangaServlet extends HttpServlet {
             throws ServletException, IOException {
         
         AdminScan adminScan = (AdminScan) request.getSession().getAttribute("adminScan");
-        String mangaIdParam = request.getParameter("mangaId");
         
         try {
-            int mangaId = Integer.parseInt(mangaIdParam);
-            Manga manga = mangaDAO.buscarPorId(mangaId);
-            
-            if (manga == null || manga.getScan().getCreadoPor().getId() != adminScan.getId()) {
+            Manga manga = obtenerMangaSeguro(request, adminScan);
+            if (manga == null) {
                 response.sendRedirect("dashboard");
                 return;
             }
@@ -239,7 +233,8 @@ public class MangaServlet extends HttpServlet {
             int scanId = manga.getScan().getId();
             
             // Eliminar manga
-            boolean eliminado = mangaDAO.eliminar(mangaId);
+            boolean eliminado = mangaDAO.eliminar(manga.getId());
+            // boolean eliminado = mangaDAO.eliminar(mangaId);
             
             if (eliminado) {
                 System.out.println("DEBUG: Manga eliminado exitosamente: " + manga.getTitulo());
@@ -253,6 +248,18 @@ public class MangaServlet extends HttpServlet {
         } catch (NumberFormatException e) {
             response.sendRedirect("dashboard");
         }
+    }
+
+    private Manga obtenerMangaSeguro(HttpServletRequest request, AdminScan adminScan) {
+        try {
+            int mangaId = Integer.parseInt(request.getParameter("mangaId"));
+            Manga manga = mangaDAO.buscarPorId(mangaId);
+
+            if (manga != null && manga.getScan().getCreadoPor().getId() == adminScan.getId()) {
+                return manga;
+            }
+        } catch (NumberFormatException ignored) {}
+        return null;
     }
 
 }
