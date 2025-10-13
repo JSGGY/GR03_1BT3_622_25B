@@ -81,8 +81,8 @@ public class CapituloDAO {
     public List<Capitulo> listarTodos() {
         EntityManager em = emf.createEntityManager();
         try {
-            TypedQuery<Capitulo> query = em.createQuery("SELECT c FROM Capitulo c", Capitulo.class);
-            return query.getResultList();
+            return em.createQuery("SELECT c FROM Capitulo c", Capitulo.class)
+                     .getResultList();
         } finally {
             em.close();
         }
@@ -91,12 +91,11 @@ public class CapituloDAO {
     public List<Capitulo> listarPorManga(int mangaId) {
         EntityManager em = emf.createEntityManager();
         try {
-            TypedQuery<Capitulo> query = em.createQuery(
+            return em.createQuery(
                     "SELECT c FROM Capitulo c WHERE c.manga.id = :mangaId ORDER BY c.numero ASC",
-                    Capitulo.class
-            );
-            query.setParameter("mangaId", mangaId);
-            return query.getResultList();
+                    Capitulo.class)
+                    .setParameter("mangaId", mangaId)
+                    .getResultList();
         } finally {
             em.close();
         }
