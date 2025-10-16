@@ -292,4 +292,16 @@ public class MangaServlet extends HttpServlet {
         }
     }
 
+    private Manga obtenerMangaSeguro(HttpServletRequest request, AdminScan adminScan) {
+        try {
+            int mangaId = Integer.parseInt(request.getParameter("mangaId"));
+            Manga manga = mangaDAO.buscarPorId(mangaId);
+
+            if (manga != null && manga.getScan().getCreadoPor().getId() == adminScan.getId()) {
+                return manga;
+            }
+        } catch (NumberFormatException ignored) {}
+        return null;
+    }
+
 }
