@@ -176,17 +176,14 @@ public class MangaServlet extends HttpServlet {
             throws ServletException, IOException {
         
         AdminScan adminScan = (AdminScan) request.getSession().getAttribute("adminScan");
-        String mangaIdParam = request.getParameter("mangaId");
         
         try {
-            int mangaId = Integer.parseInt(mangaIdParam);
-            Manga manga = mangaDAO.buscarPorId(mangaId);
-            
-            if (manga == null || manga.getScan().getCreadoPor().getId() != adminScan.getId()) {
+            Manga manga = obtenerMangaSeguro(request, adminScan);
+            if (manga == null) {
                 response.sendRedirect("dashboard");
                 return;
             }
-            
+
             String titulo = request.getParameter("titulo");
             String descripcion = request.getParameter("descripcion");
             String estadoParam = request.getParameter("estado");
@@ -227,13 +224,10 @@ public class MangaServlet extends HttpServlet {
             throws ServletException, IOException {
         
         AdminScan adminScan = (AdminScan) request.getSession().getAttribute("adminScan");
-        String mangaIdParam = request.getParameter("mangaId");
         
         try {
-            int mangaId = Integer.parseInt(mangaIdParam);
-            Manga manga = mangaDAO.buscarPorId(mangaId);
-            
-            if (manga == null || manga.getScan().getCreadoPor().getId() != adminScan.getId()) {
+            Manga manga = obtenerMangaSeguro(request, adminScan);
+            if (manga == null) {
                 response.sendRedirect("dashboard");
                 return;
             }
@@ -241,7 +235,8 @@ public class MangaServlet extends HttpServlet {
             int scanId = manga.getScan().getId();
             
             // Eliminar manga
-            boolean eliminado = mangaDAO.eliminar(mangaId);
+            boolean eliminado = mangaDAO.eliminar(manga.getId());
+            // boolean eliminado = mangaDAO.eliminar(mangaId);
             
             if (!eliminado) {
                 request.setAttribute("error", "Error al eliminar el manga");

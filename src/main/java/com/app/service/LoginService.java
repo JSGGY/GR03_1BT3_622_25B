@@ -35,7 +35,7 @@ public class LoginService {
             Lector lector = new Lector();
             lector.setUsername(username);
             lector.setCorreo(email);
-            lector.setContrase\u00f1a(password);
+            lector.setContraseña(password);
 
             return lectorDAO.guardarCompleto(lector);
 
@@ -50,11 +50,15 @@ public class LoginService {
      */
     public AdminScan registrarAdminScan(String username, String email, String password) {
         try {
+            // Se crean variables locales
+            String nombreUsuario = username;
+            String correoUsuario = email;
+            String contraseñaUsuario = password;
 
             AdminScan nuevoAdmin = new AdminScan();
-            nuevoAdmin.setUsername(username);
-            nuevoAdmin.setCorreo(email);
-            nuevoAdmin.setContrase\u00f1a(password);
+            nuevoAdmin.setUsername(nombreUsuario);
+            nuevoAdmin.setCorreo(correoUsuario);
+            nuevoAdmin.setContraseña(contraseñaUsuario);
 
             return adminScanDAO.guardarCompleto(nuevoAdmin);
             

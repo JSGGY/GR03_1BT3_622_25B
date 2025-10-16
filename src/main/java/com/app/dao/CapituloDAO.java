@@ -16,59 +16,38 @@ public class CapituloDAO {
 
 
     public boolean guardar(Capitulo capitulo) {
-        EntityManager em = emf.createEntityManager();
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            em.persist(capitulo);
-            tx.commit();
-            return true;
-        } catch (Exception e) {
-            if (tx.isActive()) tx.rollback();
-            e.printStackTrace();
-            return false;
-        } finally {
-            em.close();
-        }
+        return ejecutarTransaccion(em -> em.persist(capitulo));
     }
 
-
     public boolean actualizar(Capitulo capitulo) {
-        EntityManager em = emf.createEntityManager();
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            em.merge(capitulo);
-            tx.commit();
-            return true;
-        } catch (Exception e) {
-            if (tx.isActive()) tx.rollback();
-            e.printStackTrace();
-            return false;
-        } finally {
-            em.close();
-        }
+        return ejecutarTransaccion(em -> em.merge(capitulo));
     }
 
     public boolean eliminar(Capitulo capitulo) {
+        return ejecutarTransaccion(em -> {
+            Capitulo c = em.find(Capitulo.class, capitulo.getId());
+            if (c != null) em.remove(c);
+        });
+    }
+
+    private boolean ejecutarTransaccion(java.util.function.Consumer<EntityManager> accion) {
         EntityManager em = emf.createEntityManager();
         EntityTransaction tx = em.getTransaction();
         try {
             tx.begin();
-            Capitulo c = em.find(Capitulo.class, capitulo.getId());
-            if (c != null) {
-                em.remove(c);
-            }
+            accion.accept(em);
             tx.commit();
             return true;
         } catch (Exception e) {
             if (tx.isActive()) tx.rollback();
-            e.printStackTrace();
+            // Usa logging en vez de printStackTrace
+            java.util.logging.Logger.getLogger(CapituloDAO.class.getName()).severe(e.getMessage());
             return false;
         } finally {
             em.close();
         }
     }
+
     public Capitulo buscarPorId(int id) {
         EntityManager em = emf.createEntityManager();
         try {

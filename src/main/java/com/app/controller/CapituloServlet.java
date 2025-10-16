@@ -97,7 +97,9 @@ public class CapituloServlet extends HttpServlet {
             String descripcion = request.getParameter("descripcion");
             
             // Validar parámetros requeridos
-            if (mangaIdParam == null || numeroParam == null || titulo == null || titulo.trim().isEmpty()) {
+            boolean parametrosRequeridosMangaScan = (mangaIdParam == null || numeroParam == null ||
+                    titulo == null || titulo.trim().isEmpty());
+            if (parametrosRequeridosMangaScan) {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Faltan parámetros requeridos");
                 return;
             }
