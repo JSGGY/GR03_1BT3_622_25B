@@ -26,22 +26,6 @@ public class AdminScanDAO {
         }
     }
 
-    public void guardar(AdminScan adminScan) {
-        EntityManager em = emf.createEntityManager();
-        try {
-            em.getTransaction().begin();
-            em.persist(adminScan);
-            em.getTransaction().commit();
-        } catch (Exception e) {
-            if (em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
-            e.printStackTrace();
-        } finally {
-            em.close();
-        }
-    }
-
     public AdminScan buscarPorId(int id) {
         EntityManager em = emf.createEntityManager();
         try {
@@ -50,7 +34,7 @@ public class AdminScanDAO {
             em.close();
         }
     }
-    
+
     /**
      * Verifica si existe un AdminScan con el username o email dados
      */
@@ -58,32 +42,32 @@ public class AdminScanDAO {
         EntityManager em = emf.createEntityManager();
         try {
             Long count = em.createQuery(
-                "SELECT COUNT(a) FROM AdminScan a WHERE a.username = :username OR a.correo = :email", 
+                "SELECT COUNT(a) FROM AdminScan a WHERE a.username = :username OR a.correo = :email",
                 Long.class)
                 .setParameter("username", username)
                 .setParameter("email", email)
                 .getSingleResult();
-            
+
             return count > 0;
         } finally {
             em.close();
         }
     }
-    
+
     /**
-     * Guarda un AdminScan completo (con herencia Usuario)
+     * Guarda un AdminScan y retorna el objeto guardado con su ID generado
      */
-    public AdminScan guardarCompleto(AdminScan adminScan) {
+    public AdminScan guardar(AdminScan adminScan) {
         EntityManager em = emf.createEntityManager();
         try {
             em.getTransaction().begin();
             em.persist(adminScan);
             em.getTransaction().commit();
-            
-            System.out.println("DEBUG: AdminScan guardado - ID: " + adminScan.getId() + 
-                             ", Username: " + adminScan.getUsername() + 
+
+            System.out.println("DEBUG: AdminScan guardado - ID: " + adminScan.getId() +
+                             ", Username: " + adminScan.getUsername() +
                              ", Email: " + adminScan.getCorreo());
-            
+
             return adminScan;
         } catch (Exception e) {
             if (em.getTransaction().isActive()) {

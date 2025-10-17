@@ -30,25 +30,6 @@ public class LectorDAO {
     }
 
     /**
-     * Guarda un nuevo lector en la base de datos
-     */
-    public void guardar(Lector lector) {
-        EntityManager em = emf.createEntityManager();
-        try {
-            em.getTransaction().begin();
-            em.persist(lector);
-            em.getTransaction().commit();
-        } catch (Exception e) {
-            if (em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
-            e.printStackTrace();
-        } finally {
-            em.close();
-        }
-    }
-
-    /**
      * Busca un lector por su ID
      */
     public Lector buscarPorId(int id) {
@@ -80,9 +61,9 @@ public class LectorDAO {
     }
 
     /**
-     * Guarda un lector completo (manejado con herencia Usuario)
+     * Guarda un lector y retorna el objeto guardado con su ID generado
      */
-    public Lector guardarCompleto(Lector lector) {
+    public Lector guardar(Lector lector) {
         EntityManager em = emf.createEntityManager();
         try {
             em.getTransaction().begin();

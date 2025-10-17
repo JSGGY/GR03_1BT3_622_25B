@@ -37,7 +37,7 @@ public class LoginService {
             lector.setCorreo(email);
             lector.setContrase\u00f1a(password);
 
-            return lectorDAO.guardarCompleto(lector);
+            return lectorDAO.guardar(lector);
 
         } catch (Exception e) {
             System.err.println("ERROR registrando AdminScan: " + e.getMessage());
@@ -56,7 +56,7 @@ public class LoginService {
             nuevoAdmin.setCorreo(email);
             nuevoAdmin.setContrase\u00f1a(password);
 
-            return adminScanDAO.guardarCompleto(nuevoAdmin);
+            return adminScanDAO.guardar(nuevoAdmin);
             
         } catch (Exception e) {
             System.err.println("ERROR registrando AdminScan: " + e.getMessage());

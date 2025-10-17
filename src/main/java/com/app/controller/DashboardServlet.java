@@ -1,5 +1,7 @@
 package com.app.controller;
 
+import static com.app.constants.AppConstants.*;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -23,11 +25,11 @@ public class DashboardServlet extends HttpServlet {
             throws ServletException, IOException {
         
         HttpSession session = request.getSession();
-        AdminScan adminScan = (AdminScan) session.getAttribute("adminScan");
-        
+        AdminScan adminScan = (AdminScan) session.getAttribute(SESSION_ADMIN_SCAN);
+
         if (adminScan == null) {
             System.out.println("DEBUG: No hay AdminScan en sesiOn, redirigiendo al login");
-            response.sendRedirect(request.getContextPath() + "/index.jsp");
+            response.sendRedirect(request.getContextPath() + ROUTE_INDEX);
             return;
         }
         
