@@ -1,5 +1,7 @@
 package com.app.controller;
 
+import static com.app.constants.AppConstants.*;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -12,10 +14,8 @@ import com.app.service.ScanService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 
 @WebServlet("/crear-scan")
@@ -24,35 +24,30 @@ import jakarta.servlet.http.Part;
     maxFileSize = 1024 * 1024 * 10,
     maxRequestSize = 1024 * 1024 * 50
 )
-public class CrearScanServlet extends HttpServlet {
+public class CrearScanServlet extends BaseAuthenticatedServlet {
     private ScanService scanService = new ScanService();
     private static final String UPLOAD_DIR = "images" + File.separator + "scans";
-    
+
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         // Redirigir al dashboard si acceden directamente a la URL
-        response.sendRedirect(request.getContextPath() + "/dashboard");
+        response.sendRedirect(request.getContextPath() + ROUTE_DASHBOARD);
     }
-    
+
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
-        HttpSession session = request.getSession();
-        AdminScan adminScan = (AdminScan) session.getAttribute("adminScan");
-        
-        if (adminScan == null) {
-            response.sendRedirect(request.getContextPath() + "/index.jsp");
-            return;
-        }
-        
+
+        // Validar sesión usando método de clase base
+        AdminScan adminScan = validateSession(request, response);
+        if (adminScan == null) return;
+
         String nombre = request.getParameter("nombre");
         String descripcion = request.getParameter("descripcion");
-        
 
         String imagenUrl = "images/default-scan.svg";
-        
+
         try {
             Part filePart = request.getPart("imagen");
             if (filePart != null && filePart.getSize() > 0) {
@@ -73,7 +68,7 @@ public class CrearScanServlet extends HttpServlet {
                     String filePath = uploadFilePath + File.separator + uniqueFileName;
                     filePart.write(filePath);
                     imagenUrl = UPLOAD_DIR.replace(File.separator, "/") + "/" + uniqueFileName;
-                    
+
                     System.out.println("DEBUG: Imagen guardada en: " + filePath);
                     System.out.println("DEBUG: URL relativa: " + imagenUrl);
                 } else {
@@ -84,19 +79,16 @@ public class CrearScanServlet extends HttpServlet {
             System.out.println("ERROR: Error al procesar imagen: " + e.getMessage());
             e.printStackTrace();
         }
-        boolean nombreValido = nombre != null && !nombre.trim().isEmpty();
-        
-        if (nombreValido) {
+
+        if (nombre != null && !nombre.trim().isEmpty()) {
             Scan nuevoScan = scanService.crearScan(nombre, descripcion, imagenUrl, adminScan);
-            
-            boolean scanCreadoExitosamente = nuevoScan != null;
-            
-            if (scanCreadoExitosamente) {
+
+            if (nuevoScan != null) {
                 System.out.println("DEBUG: Scan creado exitosamente con imagen: " + imagenUrl);
             } else {
                 System.out.println("ERROR: No se pudo crear el scan");
             }
         }
-        response.sendRedirect(request.getContextPath() + "/dashboard");
+        response.sendRedirect(request.getContextPath() + ROUTE_DASHBOARD);
     }
 }

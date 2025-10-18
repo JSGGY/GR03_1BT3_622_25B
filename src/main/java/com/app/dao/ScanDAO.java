@@ -40,10 +40,10 @@ public class ScanDAO {
     public List<Scan> buscarPorAdminScan(int adminScanId) {
         EntityManager em = emf.createEntityManager();
         try {
-            TypedQuery<Scan> query = em.createQuery(
-                "SELECT DISTINCT s FROM Scan s LEFT JOIN FETCH s.mangas WHERE s.creadoPor.id = :adminId", Scan.class);
-            query.setParameter("adminId", adminScanId);
-            List<Scan> result = query.getResultList();
+            List<Scan> result = em.createQuery(
+                "SELECT DISTINCT s FROM Scan s LEFT JOIN FETCH s.mangas WHERE s.creadoPor.id = :adminId", Scan.class)
+                .setParameter("adminId", adminScanId)
+                .getResultList();
             System.out.println("DEBUG: Encontrados " + result.size() + " scans para adminId: " + adminScanId);
             return result;
         } finally {

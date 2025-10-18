@@ -1,5 +1,7 @@
 package com.app.controller;
 
+import static com.app.constants.AppConstants.*;
+
 import java.io.IOException;
 
 import com.app.model.AdminScan;
@@ -18,18 +20,18 @@ public class LoginServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String username = request.getParameter("username");
-        String password = request.getParameter("password");
-        
+        String username = request.getParameter(PARAM_USERNAME);
+        String password = request.getParameter(PARAM_PASSWORD);
+
         AdminScan adminScan = loginService.authenticate(username, password);
-        
+
         if (adminScan != null) {
 
             HttpSession session = request.getSession();
-            session.setAttribute("adminScan", adminScan);
+            session.setAttribute(SESSION_ADMIN_SCAN, adminScan);
             session.setAttribute("username", username);
-            
-            response.sendRedirect(request.getContextPath() + "/dashboard");
+
+            response.sendRedirect(request.getContextPath() + ROUTE_DASHBOARD);
         } else {
             request.setAttribute("error", "Usuario o contraseña incorrectos");
             request.getRequestDispatcher("index.jsp").forward(request, response);
