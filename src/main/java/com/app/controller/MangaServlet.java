@@ -5,6 +5,14 @@ import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.List;
 
+import static com.app.constants.AppConstants.ACTION_CREATE;
+import static com.app.constants.AppConstants.ACTION_DELETE;
+import static com.app.constants.AppConstants.ACTION_EDIT;
+import static com.app.constants.AppConstants.PARAM_ACTION;
+import static com.app.constants.AppConstants.PARAM_SCAN_ID;
+import static com.app.constants.AppConstants.ROUTE_DASHBOARD;
+import static com.app.constants.AppConstants.ROUTE_MANGA;
+import static com.app.constants.AppConstants.SESSION_ADMIN_SCAN;
 import com.app.dao.MangaDAO;
 import com.app.dao.ScanDAO;
 import com.app.model.AdminScan;
@@ -15,10 +23,8 @@ import com.app.model.Scan;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 
 @WebServlet("/manga")
@@ -27,11 +33,11 @@ import jakarta.servlet.http.Part;
     maxFileSize = 1024 * 1024 * 10,
     maxRequestSize = 1024 * 1024 * 50
 )
-public class MangaServlet extends HttpServlet {
+public class MangaServlet extends BaseAuthenticatedServlet {
     private static final long serialVersionUID = 1L;
 
-    private MangaDAO mangaDAO = new MangaDAO();
-    private ScanDAO scanDAO = new ScanDAO();
+    private final MangaDAO mangaDAO = new MangaDAO();
+    private final ScanDAO scanDAO = new ScanDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -42,99 +48,99 @@ public class MangaServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("adminScan") == null) {
-            response.sendRedirect("index.jsp");
-            return;
-        }
 
-        String action = request.getParameter("action");
+        // Validar sesión
+        AdminScan adminScan = validateSession(request, response);
+        if (adminScan == null) return;
+
+        String action = request.getParameter(PARAM_ACTION);
         if (action == null) {
-            response.sendRedirect("dashboard");
+            response.sendRedirect(request.getContextPath() + ROUTE_DASHBOARD);
             return;
         }
 
         switch (action) {
-            case "create":
-                crearManga(request, response);
+            case ACTION_CREATE:
+                crearManga(request, response, adminScan);
                 break;
-            case "edit":
+            case ACTION_EDIT:
                 editarManga(request, response);
                 break;
-            case "delete":
+            case ACTION_DELETE:
                 eliminarManga(request, response);
                 break;
             default:
-                response.sendRedirect("dashboard");
+                response.sendRedirect(request.getContextPath() + ROUTE_DASHBOARD);
                 break;
         }
     }
 
+    /**
+     * Obtiene y muestra la información de mangas para un scan específico.
+     */
     private void obtenerInfo(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("adminScan") == null) {
-            response.sendRedirect("index.jsp");
-            return;
-        }
+        // Validar sesión
+        AdminScan adminScan = validateSession(request, response);
+        if (adminScan == null) return;
 
-        String scanIdParam = request.getParameter("scanId");
+        // Validar y obtener scanId
+        String scanIdParam = request.getParameter(PARAM_SCAN_ID);
         if (scanIdParam == null || scanIdParam.isEmpty()) {
-            response.sendRedirect("dashboard");
+            response.sendRedirect(request.getContextPath() + ROUTE_DASHBOARD);
             return;
         }
 
         try {
             int scanId = Integer.parseInt(scanIdParam);
-            AdminScan adminScan = (AdminScan) session.getAttribute("adminScan");
 
-
+            // Validar propiedad del scan
             Scan scan = scanDAO.buscarPorId(scanId);
-            if (scan == null || scan.getCreadoPor().getId() != adminScan.getId()) {
-                response.sendRedirect("dashboard");
-                return;
-            }
+            if (!validateScanOwnership(adminScan, scan, request, response)) return;
 
+            // Obtener mangas del scan
             List<Manga> mangas = mangaDAO.buscarPorScanId(scanId);
 
+            // Establecer atributos
             request.setAttribute("scan", scan);
             request.setAttribute("mangas", mangas);
-            request.setAttribute("adminScan", adminScan);
+            request.setAttribute(SESSION_ADMIN_SCAN, adminScan);
             request.setAttribute("id", scanId);
 
             request.getRequestDispatcher("manga-dashboard.jsp").forward(request, response);
 
         } catch (NumberFormatException e) {
-            response.sendRedirect("dashboard");
+            response.sendRedirect(request.getContextPath() + ROUTE_DASHBOARD);
         }
     }
 
-    private void crearManga(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        
-        AdminScan adminScan = (AdminScan) request.getSession().getAttribute("adminScan");
-        String scanIdParam = request.getParameter("scanId");
-        
+    /**
+     * Crea un nuevo manga en el scan especificado.
+     */
+    private void crearManga(HttpServletRequest request, HttpServletResponse response,
+            AdminScan adminScan) throws ServletException, IOException {
+
+        String scanIdParam = request.getParameter(PARAM_SCAN_ID);
+
         try {
             int scanId = Integer.parseInt(scanIdParam);
             Scan scan = scanDAO.buscarPorId(scanId);
-            
-            if (scan == null || scan.getCreadoPor().getId() != adminScan.getId()) {
-                response.sendRedirect("dashboard");
-                return;
-            }
-            
+
+            // Validar propiedad del scan
+            if (!validateScanOwnership(adminScan, scan, request, response)) return;
+
+            // Validar título
             String titulo = request.getParameter("titulo");
-            String descripcion = request.getParameter("descripcion");
-            String estadoParam = request.getParameter("estado");
-            
             if (titulo == null || titulo.trim().isEmpty()) {
                 request.setAttribute("error", "El título es requerido");
                 obtenerInfo(request, response);
                 return;
             }
+            
+            // Obtener otros parámetros
+            String descripcion = request.getParameter("descripcion");
+            String estadoParam = request.getParameter("estado");
             
             // Crear nuevo manga
             Manga nuevoManga = new Manga();
@@ -163,12 +169,12 @@ public class MangaServlet extends HttpServlet {
                 System.err.println("ERROR: Falló al guardar el manga: " + titulo);
                 request.setAttribute("error", "Error al crear el manga");
             }
-            
+
             // Redirigir de vuelta al manga dashboard
-            response.sendRedirect("manga?scanId=" + scanId);
-            
+            response.sendRedirect(request.getContextPath() + ROUTE_MANGA + "?scanId=" + scanId);
+
         } catch (NumberFormatException e) {
-            response.sendRedirect("dashboard");
+            response.sendRedirect(request.getContextPath() + ROUTE_DASHBOARD);
         }
     }
 
@@ -180,7 +186,7 @@ public class MangaServlet extends HttpServlet {
         try {
             Manga manga = obtenerMangaSeguro(request, adminScan);
             if (manga == null) {
-                response.sendRedirect("dashboard");
+                response.sendRedirect(request.getContextPath() + ROUTE_DASHBOARD);
                 return;
             }
 
@@ -211,12 +217,12 @@ public class MangaServlet extends HttpServlet {
             if (!actualizado) {
                 request.setAttribute("error", "Error al actualizar el manga");
             }
-            
+
             // Redirigir de vuelta al manga dashboard
-            response.sendRedirect("manga?scanId=" + manga.getScan().getId());
-            
+            response.sendRedirect(request.getContextPath() + ROUTE_MANGA + "?scanId=" + manga.getScan().getId());
+
         } catch (NumberFormatException e) {
-            response.sendRedirect("dashboard");
+            response.sendRedirect(request.getContextPath() + ROUTE_DASHBOARD);
         }
     }
 
@@ -228,12 +234,12 @@ public class MangaServlet extends HttpServlet {
         try {
             Manga manga = obtenerMangaSeguro(request, adminScan);
             if (manga == null) {
-                response.sendRedirect("dashboard");
+                response.sendRedirect(request.getContextPath() + ROUTE_DASHBOARD);
                 return;
             }
             
             int scanId = manga.getScan().getId();
-            
+
             // Eliminar manga
             boolean eliminado = mangaDAO.eliminar(manga.getId());
             // boolean eliminado = mangaDAO.eliminar(mangaId);
@@ -241,12 +247,12 @@ public class MangaServlet extends HttpServlet {
             if (!eliminado) {
                 request.setAttribute("error", "Error al eliminar el manga");
             }
-            
+
             // Redirigir de vuelta al manga dashboard
-            response.sendRedirect("manga?scanId=" + scanId);
-            
+            response.sendRedirect(request.getContextPath() + ROUTE_MANGA + "?scanId=" + scanId);
+
         } catch (NumberFormatException e) {
-            response.sendRedirect("dashboard");
+            response.sendRedirect(request.getContextPath() + ROUTE_DASHBOARD);
         }
     }
 

@@ -54,8 +54,8 @@ public class ImagenServlet extends HttpServlet {
         Manga manga = mangaDAO.buscarPorId(mangaId);
         
         if (manga == null || manga.getPortadaBlob() == null) {
-            // Servir imagen por defecto
-            response.sendRedirect(response.encodeRedirectURL("images/default-scan.svg"));
+            // Enviar un error 404 en lugar de redirigir
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Imagen no encontrada");
             return;
         }
 

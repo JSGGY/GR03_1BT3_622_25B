@@ -78,8 +78,8 @@ public class MangaDAO {
     public List<Manga> obtenerTodos() {
         EntityManager em = emf.createEntityManager();
         try {
-            TypedQuery<Manga> query = em.createQuery("SELECT m FROM Manga m ORDER BY m.titulo", Manga.class);
-            return query.getResultList();
+            return em.createQuery("SELECT m FROM Manga m ORDER BY m.titulo", Manga.class)
+                     .getResultList();
         } finally {
             em.close();
         }
@@ -110,13 +110,12 @@ public class MangaDAO {
     public boolean existeTituloEnScan(String titulo, int scanId) {
         EntityManager em = emf.createEntityManager();
         try {
-            TypedQuery<Long> query = em.createQuery(
-                "SELECT COUNT(m) FROM Manga m WHERE m.titulo = :titulo AND m.scan.id = :scanId", 
-                Long.class
-            );
-            query.setParameter("titulo", titulo);
-            query.setParameter("scanId", scanId);
-            return query.getSingleResult() > 0;
+            return em.createQuery(
+                "SELECT COUNT(m) FROM Manga m WHERE m.titulo = :titulo AND m.scan.id = :scanId",
+                Long.class)
+                .setParameter("titulo", titulo)
+                .setParameter("scanId", scanId)
+                .getSingleResult() > 0;
         } finally {
             em.close();
         }
@@ -125,14 +124,13 @@ public class MangaDAO {
     public boolean existeTituloEnScanExceptoId(String titulo, int scanId, int mangaId) {
         EntityManager em = emf.createEntityManager();
         try {
-            TypedQuery<Long> query = em.createQuery(
-                "SELECT COUNT(m) FROM Manga m WHERE m.titulo = :titulo AND m.scan.id = :scanId AND m.id != :mangaId", 
-                Long.class
-            );
-            query.setParameter("titulo", titulo);
-            query.setParameter("scanId", scanId);
-            query.setParameter("mangaId", mangaId);
-            return query.getSingleResult() > 0;
+            return em.createQuery(
+                "SELECT COUNT(m) FROM Manga m WHERE m.titulo = :titulo AND m.scan.id = :scanId AND m.id != :mangaId",
+                Long.class)
+                .setParameter("titulo", titulo)
+                .setParameter("scanId", scanId)
+                .setParameter("mangaId", mangaId)
+                .getSingleResult() > 0;
         } finally {
             em.close();
         }

@@ -37,7 +37,7 @@ public class MangaInvitadoServlet extends HttpServlet {
 
             Scan scan = scanDAO.buscarPorId(scanId);
             if (scan == null) {
-                response.sendRedirect("ingresoInvitado");
+                response.sendRedirect(request.getContextPath() + "/ingresoInvitado");
                 return;
             }
 
@@ -51,7 +51,7 @@ public class MangaInvitadoServlet extends HttpServlet {
             request.getRequestDispatcher("manga-invitados.jsp").forward(request, response);
 
         } catch (NumberFormatException e) {
-            response.sendRedirect("ingresoInvitado");
+            response.sendRedirect(request.getContextPath() + "/ingresoInvitado");
         }
     }
 }
