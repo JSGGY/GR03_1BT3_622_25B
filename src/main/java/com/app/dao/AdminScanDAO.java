@@ -36,6 +36,24 @@ public class AdminScanDAO {
     }
 
     /**
+     * Busca un AdminScan por su email/correo
+     */
+    public AdminScan buscarPorEmail(String email) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            return em.createQuery(
+                "SELECT a FROM AdminScan a WHERE a.correo = :email", 
+                AdminScan.class)
+                .setParameter("email", email)
+                .getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
      * Verifica si existe un AdminScan con el username o email dados
      */
     public boolean existePorUsernameOEmail(String username, String email) {

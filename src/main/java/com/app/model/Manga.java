@@ -94,4 +94,38 @@ public class Manga {
             return 0;
         }
     }
+
+    @Column(name = "totalLikes")
+    private int totalLikes = 0;
+
+    public int getTotalLikes() {
+        return totalLikes;
+    }
+    public void agregarLike() {
+        this.totalLikes++;
+    }
+    
+    /**
+     * Verifica si el manga puede transicionar del estado actual a un nuevo estado.
+     * 
+     * Reglas de transición:
+     * - EN_PROGRESO puede ir a: COMPLETADO, PAUSADO, CANCELADO
+     * - PAUSADO puede ir a: EN_PROGRESO, COMPLETADO, CANCELADO
+     * - COMPLETADO NO puede cambiar a ningún otro estado (es final)
+     * - CANCELADO NO puede cambiar a ningún otro estado (es final)
+     * 
+     * @param nuevoEstado El estado al que se quiere transicionar
+     * @return true si la transición es válida, false en caso contrario
+     */
+    public boolean puedeTransicionarA(EstadoManga nuevoEstado) {
+        // Estados finales no pueden cambiar
+        if (this.estado == EstadoManga.COMPLETADO || 
+            this.estado == EstadoManga.CANCELADO) {
+            return false;
+        }
+        
+        // EN_PROGRESO y PAUSADO pueden transicionar a cualquier estado
+        return (this.estado == EstadoManga.EN_PROGRESO || 
+                this.estado == EstadoManga.PAUSADO);
+    }
 }

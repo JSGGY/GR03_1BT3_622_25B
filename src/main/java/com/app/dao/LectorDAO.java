@@ -87,5 +87,17 @@ public class LectorDAO {
             em.close();
         }
     }
+
+    /**
+     * Busca todos los lectores que siguen un manga específico.
+     * Nota: Por ahora retorna una lista vacía.
+     * TODO: Implementar cuando se agregue la relación ManyToMany Lector-Manga
+     * 
+     * @param mangaId ID del manga
+     * @return Lista de lectores que siguen el manga
+     */
+    public java.util.List<Lector> buscarSeguidoresPorManga(int mangaId) {
+        return new java.util.ArrayList<>();
+    }
 }
 

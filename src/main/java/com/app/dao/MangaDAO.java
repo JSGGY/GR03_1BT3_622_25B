@@ -85,21 +85,39 @@ public class MangaDAO {
         }
     }
     
+    /**
+     * Elimina un manga de la base de datos.
+     * Gracias a CascadeType.ALL en la relación OneToMany con Capitulo,
+     * todos los capítulos asociados se eliminarán automáticamente.
+     * 
+     * @param id ID del manga a eliminar
+     * @return true si se eliminó correctamente, false si no existe o hubo error
+     */
     public boolean eliminar(int id) {
         EntityManager em = emf.createEntityManager();
         try {
             em.getTransaction().begin();
+
+            // Buscar el manga
             Manga manga = em.find(Manga.class, id);
-            if (manga != null) {
-                em.remove(manga);
-                em.getTransaction().commit();
-                return true;
-            } else {
+            if (manga == null) {
                 em.getTransaction().rollback();
+                System.out.println("❌ Manga con ID=" + id + " no existe");
                 return false;
             }
+
+            // Eliminar manga (los capítulos se eliminan en cascada automáticamente)
+            em.remove(manga);
+            em.getTransaction().commit();
+
+            System.out.println("✅ Manga ID=" + id + " eliminado correctamente (con capítulos en cascada)");
+            return true;
+
         } catch (Exception e) {
-            em.getTransaction().rollback();
+            System.err.println("ERROR al eliminar manga ID=" + id + ": " + e.getMessage());
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
             e.printStackTrace();
             return false;
         } finally {

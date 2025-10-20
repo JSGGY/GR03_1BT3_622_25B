@@ -105,4 +105,22 @@ public class Capitulo {
     public String toString() {
         return "Capitulo{id=" + id + ", titulo='" + titulo + "', numero=" + numero + ", totalPaginas=" + getTotalPaginas() + "}";
     }
+
+    public boolean actualizarDatos(String titulo, String descripcion) {
+        if (titulo == null || titulo.trim().isEmpty()) {
+            return false;
+        }
+        this.titulo = titulo;
+        this.descripcion = descripcion;
+        return true;
+    }
+
+
+    public boolean cambiarNumeroCapitulo(int nuevoNumero) {
+        if (nuevoNumero <= 0) {
+            return false;  // Número debe ser positivo
+        }
+        this.numero = nuevoNumero;
+        return true;
+    }
 }
