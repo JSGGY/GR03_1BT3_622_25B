@@ -12,6 +12,7 @@ import jakarta.persistence.TypedQuery;
 public class ScanDAO {
     private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("AdminScanPU");
 
+
     public void guardar(Scan scan) {
         EntityManager em = emf.createEntityManager();
         try {

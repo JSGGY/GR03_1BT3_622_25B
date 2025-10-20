@@ -1,7 +1,8 @@
 package com.app.dao;
 
 import com.app.model.AdminScan;
-
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.NoResultException;
@@ -23,6 +24,22 @@ public class AdminScanDAO {
             return null;
         } finally {
             em.close();
+        }
+    }
+
+    public boolean eliminar(int id) {
+        Transaction tx = null;
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            AdminScan admin = session.get(AdminScan.class, id);
+            if (admin == null) return false;
+            tx = session.beginTransaction();
+            session.delete(admin);
+            tx.commit();
+            return true;
+        } catch (Exception e) {
+            if (tx != null) tx.rollback();
+            e.printStackTrace();
+            return false;
         }
     }
 
@@ -98,3 +115,7 @@ public class AdminScanDAO {
         }
     }
 }
+
+
+
+

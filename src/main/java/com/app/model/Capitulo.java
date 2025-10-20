@@ -38,6 +38,8 @@ public class Capitulo {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "manga_id", nullable = false)
     private Manga manga;
+    private String rutaArchivo;
+
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "capitulo_imagenes", joinColumns = @JoinColumn(name = "capitulo_id"))
