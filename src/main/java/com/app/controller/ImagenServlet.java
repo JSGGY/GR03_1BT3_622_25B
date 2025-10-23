@@ -52,16 +52,22 @@ public class ImagenServlet extends HttpServlet {
 
     private void servirImagenManga(int mangaId, HttpServletResponse response) throws IOException {
         Manga manga = mangaDAO.buscarPorId(mangaId);
+        // Introducción de variables explicativas
+        boolean imagenMangaInvalida = (manga == null || manga.getPortadaBlob() == null);
+        byte[] portadaMangaBytes = manga != null ? manga.getPortadaBlob() : null;
+        String tipoContenidoManga = (manga != null && manga.getPortadaTipo() != null)
+                ? manga.getPortadaTipo()
+                : "image/jpeg";
         
-        if (manga == null || manga.getPortadaBlob() == null) {
+        if (imagenMangaInvalida) {
             // Enviar un error 404 en lugar de redirigir
             response.sendError(HttpServletResponse.SC_NOT_FOUND, "Imagen no encontrada");
             return;
         }
 
         // Configurar headers para la imagen
-        response.setContentType(manga.getPortadaTipo() != null ? manga.getPortadaTipo() : "image/jpeg");
-        response.setContentLength(manga.getPortadaBlob().length);
+        response.setContentType(tipoContenidoManga);
+        response.setContentLength(portadaMangaBytes.length);
         
         // Configurar cache headers
         response.setHeader("Cache-Control", "max-age=3600"); // 1 hora de cache

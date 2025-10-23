@@ -106,7 +106,10 @@ public class EditarScanServlet extends BaseAuthenticatedServlet {
 
     private boolean tieneAccesoAlScan(int scanId, AdminScan adminScan) {
         Scan scan = scanService.obtenerScanPorId(scanId);
-        return scan != null && scan.getCreadoPor().getId() == adminScan.getId();
+        // Variables explicativas
+        boolean scanExiste = (scan != null);
+        boolean creadoPorAdminActual = scanExiste && (scan.getCreadoPor().getId() == adminScan.getId());
+        return scanExiste && creadoPorAdminActual;
     }
 
     private void updateBasicFields(HttpServletRequest request, Scan scan) {
