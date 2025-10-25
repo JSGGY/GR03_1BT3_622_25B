@@ -53,11 +53,15 @@ public class LoginService {
     }
     public Lector registrarLector(String username, String email, String password) {
         try {
+            // Se crean variables locales
+            String nombreLector = username;
+            String correoLector = email;
+            String contraseñaLector = password;
 
             Lector lector = new Lector();
-            lector.setUsername(username);
-            lector.setCorreo(email);
-            lector.setContraseña(password);
+            lector.setUsername(nombreLector);
+            lector.setCorreo(correoLector);
+            lector.setContraseña(contraseñaLector);
 
             return lectorDAO.guardar(lector);
 

@@ -1,33 +1,17 @@
 package com.app.dao;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import com.app.model.Scan;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
-import jakarta.persistence.TypedQuery;
 
 public class ScanDAO {
     private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("AdminScanPU");
 
-
-    public void guardar(Scan scan) {
-        EntityManager em = emf.createEntityManager();
-        try {
-            em.getTransaction().begin();
-            em.persist(scan);
-            em.getTransaction().commit();
-        } catch (Exception e) {
-            if (em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
-            e.printStackTrace();
-        } finally {
-            em.close();
-        }
-    }
 
     public Scan buscarPorId(int id) {
         EntityManager em = emf.createEntityManager();
@@ -65,31 +49,28 @@ public class ScanDAO {
         }
     }
 
+    public void guardar(Scan scan) {
+        executeTransaction(em -> em.persist(scan));
+    }
 
     public void actualizar(Scan scan) {
-        EntityManager em = emf.createEntityManager();
-        try {
-            em.getTransaction().begin();
-            em.merge(scan);
-            em.getTransaction().commit();
-        } catch (Exception e) {
-            if (em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
-            e.printStackTrace();
-        } finally {
-            em.close();
-        }
+        executeTransaction(em -> em.merge(scan));
     }
 
     public void eliminar(int id) {
-        EntityManager em = emf.createEntityManager();
-        try {
-            em.getTransaction().begin();
+        executeTransaction(em -> {
             Scan scan = em.find(Scan.class, id);
             if (scan != null) {
                 em.remove(scan);
             }
+        });
+    }
+
+    private void executeTransaction(Consumer<EntityManager> action) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            em.getTransaction().begin();
+            action.accept(em);
             em.getTransaction().commit();
         } catch (Exception e) {
             if (em.getTransaction().isActive()) {
