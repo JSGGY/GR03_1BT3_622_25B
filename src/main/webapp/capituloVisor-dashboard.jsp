@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="com.app.model.Capitulo" %>
+<%@ page import="com.app.model.CapituloImagen" %>
 <html>
 <head>
     <%
@@ -25,8 +26,8 @@
 <h2>Capítulo: <%= capitulo.getTitulo() %> (N°<%= capitulo.getNumero() %>)</h2>
 
 <%
-    List<String> imagenesUrls = capitulo.getImagenesUrls();
-    if (imagenesUrls == null || imagenesUrls.isEmpty()) {
+    List<CapituloImagen> imagenes = capitulo.getImagenes();
+    if (imagenes == null || imagenes.isEmpty()) {
 %>
     <p>No hay imágenes para este capítulo.</p>
 <%
@@ -34,9 +35,11 @@
 %>
 <div class="imagen-centro">
     <%
-        for (String url : imagenesUrls) {
+        for (CapituloImagen imagen : imagenes) {
+            // Usar la URL del servlet de imágenes para cargar desde BLOB
+            String imagenUrl = request.getContextPath() + "/imagen/capitulo/" + imagen.getId();
     %>
-        <img src="<%= url %>" alt="Página del capítulo">
+        <img src="<%= imagenUrl %>" alt="Página <%= imagen.getOrden() + 1 %>" onerror="this.alt='Error al cargar imagen'">
     <%
         }
     %>

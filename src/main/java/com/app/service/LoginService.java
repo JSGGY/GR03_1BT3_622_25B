@@ -9,6 +9,25 @@ public class LoginService {
     private final AdminScanDAO adminScanDAO = new AdminScanDAO();
     private final LectorDAO lectorDAO = new LectorDAO();
 
+    /**
+     * Autentica un AdminScan
+     */
+    public AdminScan authenticateAdminScan(String username, String password) {
+        return adminScanDAO.findByUsernameAndPassword(username, password);
+    }
+
+    /**
+     * Autentica un Lector
+     */
+    public Lector authenticateLector(String username, String password) {
+        return lectorDAO.findByUsernameAndPassword(username, password);
+    }
+
+    /**
+     * Método legacy - mantener por compatibilidad
+     * @deprecated Usar authenticateAdminScan o authenticateLector
+     */
+    @Deprecated
     public AdminScan authenticate(String username, String password) {
         return adminScanDAO.findByUsernameAndPassword(username, password);
     }
@@ -20,10 +39,13 @@ public class LoginService {
     
     /**
      * Verifica si ya existe un usuario con el username o email dados
+     * Busca tanto en AdminScan como en Lector
      */
     public boolean existeUsuario(String username, String email) {
         try {
-            return adminScanDAO.existePorUsernameOEmail(username, email);
+            boolean existeAdmin = adminScanDAO.existePorUsernameOEmail(username, email);
+            boolean existeLector = lectorDAO.existePorUsernameOEmail(username, email);
+            return existeAdmin || existeLector;
         } catch (Exception e) {
             System.err.println("ERROR verificando usuario existente: " + e.getMessage());
             return true;

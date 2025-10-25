@@ -1,9 +1,8 @@
 package com.app.controller;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Paths;
-import java.util.UUID;
 
 import static com.app.constants.AppConstants.ROUTE_DASHBOARD;
 import com.app.model.AdminScan;
@@ -25,7 +24,6 @@ import jakarta.servlet.http.Part;
 )
 public class CrearScanServlet extends BaseAuthenticatedServlet {
     private ScanService scanService = new ScanService();
-    private static final String UPLOAD_DIR = "images" + File.separator + "scans";
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -45,52 +43,71 @@ public class CrearScanServlet extends BaseAuthenticatedServlet {
         String nombre = request.getParameter("nombre");
         String descripcion = request.getParameter("descripcion");
 
-        String imagenUrl = "images/default-scan.svg";
+        // Crear nuevo scan
+        Scan nuevoScan = new Scan();
+        nuevoScan.setNombre(nombre);
+        nuevoScan.setDescripcion(descripcion);
+        nuevoScan.setCreadoPor(adminScan);
 
-        try {
-            Part filePart = request.getPart("imagen");
-            if (filePart != null && filePart.getSize() > 0) {
-                String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+        // Procesar imagen como BLOB
+        procesarImagenScan(request, nuevoScan);
 
-                String mimeType = filePart.getContentType();
-                if (mimeType != null && mimeType.startsWith("image/")) {
-                    String fileExtension = fileName.substring(fileName.lastIndexOf("."));
-                    String uniqueFileName = UUID.randomUUID().toString() + fileExtension;
-                    String applicationPath = request.getServletContext().getRealPath("");
-                    String uploadFilePath = applicationPath + File.separator + UPLOAD_DIR;
-
-                    File uploadDir = new File(uploadFilePath);
-                    if (!uploadDir.exists()) {
-                        uploadDir.mkdirs();
-                    }
-
-                    String filePath = uploadFilePath + File.separator + uniqueFileName;
-                    filePart.write(filePath);
-                    imagenUrl = UPLOAD_DIR.replace(File.separator, "/") + "/" + uniqueFileName;
-
-                    System.out.println("DEBUG: Imagen guardada en: " + filePath);
-                    System.out.println("DEBUG: URL relativa: " + imagenUrl);
-                } else {
-                    System.out.println("DEBUG: Archivo no es una imagen válida: " + mimeType);
-                }
-            }
-        } catch (Exception e) {
-            System.out.println("ERROR: Error al procesar imagen: " + e.getMessage());
-            e.printStackTrace();
-        }
         boolean nombreValido = nombre != null && !nombre.trim().isEmpty();
         
         if (nombreValido) {
-            Scan nuevoScan = scanService.crearScan(nombre, descripcion, imagenUrl, adminScan);
+            boolean guardado = scanService.guardarScan(nuevoScan);
             
-            boolean scanCreadoExitosamente = nuevoScan != null;
-            
-            if (scanCreadoExitosamente) {
-                System.out.println("DEBUG: Scan creado exitosamente con imagen: " + imagenUrl);
+            if (guardado) {
+                System.out.println("DEBUG: Scan creado exitosamente con imagen BLOB");
             } else {
                 System.out.println("ERROR: No se pudo crear el scan");
             }
         }
         response.sendRedirect(request.getContextPath() + ROUTE_DASHBOARD);
+    }
+
+    /**
+     * Procesa la imagen del scan y la guarda como BLOB
+     */
+    private void procesarImagenScan(HttpServletRequest request, Scan scan) {
+        try {
+            Part filePart = request.getPart("imagen");
+            
+            if (filePart != null) {
+                long fileSize = filePart.getSize();
+                String fileName = filePart.getSubmittedFileName();
+                String mimeType = filePart.getContentType();
+                
+                if (fileSize > 0) {
+                    if (fileName != null && !fileName.trim().isEmpty()) {
+                        fileName = Paths.get(fileName).getFileName().toString();
+                        
+                        // Validar que sea una imagen válida
+                        if (com.app.util.ImagenUtil.validarImagen(mimeType, fileSize)) {
+                            // Leer los bytes de la imagen
+                            try (InputStream inputStream = filePart.getInputStream()) {
+                                byte[] imageBytes = inputStream.readAllBytes();
+                                
+                                // Verificar que se leyeron bytes
+                                if (imageBytes != null && imageBytes.length > 0) {
+                                    // Guardar en BLOB
+                                    scan.setImagenBlob(imageBytes);
+                                    scan.setImagenTipo(mimeType);
+                                    scan.setImagenNombre(fileName);
+                                    
+                                    System.out.println("DEBUG: Imagen procesada para scan - " + fileName + " (" + imageBytes.length + " bytes)");
+                                } else {
+                                    System.err.println("ERROR: No se pudieron leer bytes de la imagen");
+                                }
+                            }
+                        } else {
+                            System.err.println("ERROR: Imagen inválida - " + fileName + " (Tipo: " + mimeType + ", Tamaño: " + fileSize + " bytes)");
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("ERROR al procesar imagen del scan: " + e.getMessage());
+        }
     }
 }

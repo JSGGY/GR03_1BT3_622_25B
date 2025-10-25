@@ -3,29 +3,23 @@ package com.app.service;
 import java.util.List;
 
 import com.app.dao.ScanDAO;
-import com.app.model.AdminScan;
 import com.app.model.Scan;
 
 public class ScanService {
     private ScanDAO scanDAO = new ScanDAO();
 
-    public Scan crearScan(String nombre, String descripcion, AdminScan adminScan) {
-        return crearScan(nombre, descripcion, "images/default-scan.svg", adminScan);
-    }
-    
-    public Scan crearScan(String nombre, String descripcion, String imagenUrl, AdminScan adminScan) {
+    /**
+     * Guarda un scan en la base de datos
+     */
+    public boolean guardarScan(Scan scan) {
         try {
-            Scan nuevoScan = new Scan();
-            nuevoScan.setNombre(nombre);
-            nuevoScan.setDescripcion(descripcion);
-            nuevoScan.setImagenUrl(imagenUrl != null ? imagenUrl : "images/default-scan.svg");
-            nuevoScan.setCreadoPor(adminScan);
-            
-            scanDAO.guardar(nuevoScan);
-            return nuevoScan;
+            scanDAO.guardar(scan);
+            System.out.println("DEBUG: Scan guardado en BD - ID: " + scan.getId());
+            return true;
         } catch (Exception e) {
+            System.out.println("ERROR: Error al guardar scan: " + e.getMessage());
             e.printStackTrace();
-            return null;
+            return false;
         }
     }
 

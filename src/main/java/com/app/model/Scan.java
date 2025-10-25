@@ -11,6 +11,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -28,8 +29,15 @@ public class Scan {
     @Column(length = 500)
     private String descripcion;
     
-    @Column(name = "imagen_url")
-    private String imagenUrl;
+    @Lob
+    @Column(name = "imagen_blob", columnDefinition = "MEDIUMBLOB")
+    private byte[] imagenBlob;
+    
+    @Column(name = "imagen_tipo", length = 50)
+    private String imagenTipo;
+    
+    @Column(name = "imagen_nombre")
+    private String imagenNombre;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creado_por_id", nullable = false)
@@ -38,6 +46,9 @@ public class Scan {
     @OneToMany(mappedBy = "scan", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Manga> mangas = new ArrayList<>();
 
+    // =======================
+    // Getters y Setters
+    // =======================
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
     
@@ -53,8 +64,14 @@ public class Scan {
     public List<Manga> getMangas() { return mangas; }
     public void setMangas(List<Manga> mangas) { this.mangas = mangas; }
     
-    public String getImagenUrl() { return imagenUrl; }
-    public void setImagenUrl(String imagenUrl) { this.imagenUrl = imagenUrl; }
+    public byte[] getImagenBlob() { return imagenBlob; }
+    public void setImagenBlob(byte[] imagenBlob) { this.imagenBlob = imagenBlob; }
+    
+    public String getImagenTipo() { return imagenTipo; }
+    public void setImagenTipo(String imagenTipo) { this.imagenTipo = imagenTipo; }
+    
+    public String getImagenNombre() { return imagenNombre; }
+    public void setImagenNombre(String imagenNombre) { this.imagenNombre = imagenNombre; }
     
     @Override
     public String toString() {

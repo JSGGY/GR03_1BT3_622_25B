@@ -8,13 +8,13 @@
 <body class="dashboard-page">
     <div class="dashboard-container">
         <%
+            Boolean isLectorAutenticado = (Boolean) request.getAttribute("isLectorAutenticado");
+            com.app.model.Lector lector = (com.app.model.Lector) request.getAttribute("lector");
             com.app.model.Scan scan = (com.app.model.Scan) request.getAttribute("scan");
             java.util.List<com.app.model.Manga> mangas = (java.util.List<com.app.model.Manga>) request.getAttribute("mangas");
 
-            String scanImagenUrl = scan.getImagenUrl();
-            if (scanImagenUrl == null || scanImagenUrl.trim().isEmpty()) {
-                scanImagenUrl = "images/default-scan.svg";
-            }
+            // Usar la URL del servlet de imágenes para cargar desde BLOB
+            String scanImagenUrl = "imagen/scan/" + scan.getId();
         %>
         <div class="scan-header">
             <div class="scan-info">
@@ -30,7 +30,15 @@
                 </div>
             </div>
             <div class="header-actions">
-                <a href="ingresoInvitado" class="btn-secondary">← Volver a Scans</a>
+                <% if (isLectorAutenticado != null && isLectorAutenticado && lector != null) { %>
+                    <!-- Lector autenticado -->
+                    <span style="margin-right: 15px; color: #666;">👤 <%= lector.getUsername() %></span>
+                    <a href="logout" class="btn-secondary">Cerrar Sesión</a>
+                    <a href="ingresoInvitado" class="btn-secondary" style="margin-left: 10px;">← Volver a Scans</a>
+                <% } else { %>
+                    <!-- Invitado sin autenticar -->
+                    <a href="ingresoInvitado" class="btn-secondary">← Volver a Scans</a>
+                <% } %>
             </div>
         </div>
 

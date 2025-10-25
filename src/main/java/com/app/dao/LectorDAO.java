@@ -17,7 +17,7 @@ public class LectorDAO {
         EntityManager em = emf.createEntityManager();
         try {
             return em.createQuery(
-                            "SELECT l FROM Lector l WHERE l.nombre = :username AND l.contraseña = :password",
+                            "SELECT l FROM Lector l WHERE l.username = :username AND l.contraseña = :password",
                             Lector.class)
                     .setParameter("username", username)
                     .setParameter("password", password)
@@ -48,7 +48,7 @@ public class LectorDAO {
         EntityManager em = emf.createEntityManager();
         try {
             Long count = em.createQuery(
-                            "SELECT COUNT(l) FROM Lector l WHERE l.nombre = :username OR l.correo = :email",
+                            "SELECT COUNT(l) FROM Lector l WHERE l.username = :username OR l.correo = :email",
                             Long.class)
                     .setParameter("username", username)
                     .setParameter("email", email)

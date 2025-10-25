@@ -3,7 +3,9 @@ package com.app.controller;
 import java.io.IOException;
 import java.util.List;
 
+import static com.app.constants.AppConstants.SESSION_LECTOR;
 import com.app.dao.ScanDAO;
+import com.app.model.Lector;
 import com.app.model.Scan;
 
 import jakarta.servlet.ServletException;
@@ -23,6 +25,22 @@ public class IngresoInvitadoServlet extends HttpServlet {
             throws ServletException, IOException {
 
         HttpSession session = request.getSession();
+        
+        // Verificar si hay un Lector autenticado
+        Lector lector = (Lector) session.getAttribute(SESSION_LECTOR);
+        
+        if (lector != null) {
+            // Lector autenticado
+            System.out.println("DEBUG: Acceso de Lector autenticado - " + lector.getUsername());
+            request.setAttribute("lector", lector);
+            request.setAttribute("isLectorAutenticado", true);
+        } else {
+            // Invitado sin autenticar
+            System.out.println("DEBUG: Acceso de invitado sin autenticar");
+            request.setAttribute("isLectorAutenticado", false);
+        }
+        
+        // Cargar todos los scans disponibles
         List<Scan> scans = scanDAO.listarTodos();
         for (Scan scan : scans) {
             System.out.println(scan);

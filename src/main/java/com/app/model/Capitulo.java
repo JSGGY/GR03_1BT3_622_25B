@@ -4,9 +4,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.persistence.CollectionTable;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -14,7 +13,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OrderColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -39,11 +39,9 @@ public class Capitulo {
     @JoinColumn(name = "manga_id", nullable = false)
     private Manga manga;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "capitulo_imagenes", joinColumns = @JoinColumn(name = "capitulo_id"))
-    @Column(name = "imagen_url")
-    @OrderColumn(name = "orden")
-    private List<String> imagenesUrls = new ArrayList<>();
+    @OneToMany(mappedBy = "capitulo", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OrderBy("orden ASC")
+    private List<CapituloImagen> imagenes = new ArrayList<>();
 
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
@@ -77,8 +75,8 @@ public class Capitulo {
     public Manga getManga() { return manga; }
     public void setManga(Manga manga) { this.manga = manga; }
 
-    public List<String> getImagenesUrls() { return imagenesUrls; }
-    public void setImagenesUrls(List<String> imagenesUrls) { this.imagenesUrls = imagenesUrls; }
+    public List<CapituloImagen> getImagenes() { return imagenes; }
+    public void setImagenes(List<CapituloImagen> imagenes) { this.imagenes = imagenes; }
 
     public LocalDateTime getFechaCreacion() { return fechaCreacion; }
     public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
@@ -86,19 +84,33 @@ public class Capitulo {
     public LocalDateTime getFechaActualizacion() { return fechaActualizacion; }
     public void setFechaActualizacion(LocalDateTime fechaActualizacion) { this.fechaActualizacion = fechaActualizacion; }
 
-
-    public void agregarImagen(String imagenUrl) {
-        if (imagenUrl != null && !imagenUrl.trim().isEmpty()) {
-            this.imagenesUrls.add(imagenUrl);
+    /**
+     * Agrega una imagen al capítulo en el orden correcto
+     */
+    public void agregarImagen(CapituloImagen imagen) {
+        if (imagen != null) {
+            imagen.setCapitulo(this);
+            imagen.setOrden(this.imagenes.size());
+            this.imagenes.add(imagen);
         }
     }
 
-    public void eliminarImagen(String imagenUrl) {
-        this.imagenesUrls.remove(imagenUrl);
+    /**
+     * Elimina una imagen del capítulo
+     */
+    public void eliminarImagen(CapituloImagen imagen) {
+        this.imagenes.remove(imagen);
+        // Reordenar las imágenes restantes
+        for (int i = 0; i < imagenes.size(); i++) {
+            imagenes.get(i).setOrden(i);
+        }
     }
 
+    /**
+     * Retorna el total de páginas (imágenes) del capítulo
+     */
     public int getTotalPaginas() {
-        return imagenesUrls != null ? imagenesUrls.size() : 0;
+        return imagenes != null ? imagenes.size() : 0;
     }
 
     @Override

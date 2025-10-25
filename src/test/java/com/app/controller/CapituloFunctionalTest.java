@@ -17,6 +17,7 @@ import com.app.dao.MangaDAO;
 import com.app.dao.ScanDAO;
 import com.app.model.AdminScan;
 import com.app.model.Capitulo;
+import com.app.model.CapituloImagen;
 import com.app.model.EstadoManga;
 import com.app.model.Manga;
 import com.app.model.Scan;
@@ -102,7 +103,14 @@ class CapituloFunctionalTest {
         capituloOriginal.setNumero(1);
         capituloOriginal.setDescripcion("Primer capítulo del manga");
         capituloOriginal.setManga(manga);
-        capituloOriginal.agregarImagen("images/capitulos/imagen-1.jpg");
+        
+        // Crear una imagen de prueba con datos simulados
+        CapituloImagen imagenPrueba = new CapituloImagen();
+        imagenPrueba.setImagenNombre("imagen-1.jpg");
+        imagenPrueba.setImagenTipo("image/jpeg");
+        // Simulamos bytes de imagen para el test (no necesitamos imagen real)
+        imagenPrueba.setImagenBlob(new byte[]{1, 2, 3, 4, 5});
+        capituloOriginal.agregarImagen(imagenPrueba);
         
         capituloDAO.guardar(capituloOriginal);
         int capituloId = capituloOriginal.getId();

@@ -7,12 +7,25 @@
 <body class="dashboard-page">
 <div class="dashboard-container">
     <div class="dashboard-header">
-        <h1>Bienvenido Invitado</h1>
         <%
+            Boolean isLectorAutenticado = (Boolean) request.getAttribute("isLectorAutenticado");
+            com.app.model.Lector lector = (com.app.model.Lector) request.getAttribute("lector");
             java.util.List<com.app.model.Scan> scans = (java.util.List<com.app.model.Scan>) request.getAttribute("scans");
+            
+            String titulo = "Bienvenido Invitado";
+            if (isLectorAutenticado != null && isLectorAutenticado && lector != null) {
+                titulo = "Bienvenido, " + lector.getUsername();
+            }
         %>
+        <h1><%= titulo %></h1>
         <div class="header-actions">
-            <a href="index.jsp" class="btn-secondary">Volver al Inicio</a>
+            <% if (isLectorAutenticado != null && isLectorAutenticado) { %>
+                <!-- Lector autenticado -->
+                <a href="logout" class="btn-secondary">Cerrar Sesión</a>
+            <% } else { %>
+                <!-- Invitado sin autenticar -->
+                <a href="index.jsp" class="btn-secondary">Volver al Inicio</a>
+            <% } %>
         </div>
     </div>
     <div class="scans-container">
@@ -22,10 +35,8 @@
             <%
                 if (scans != null && !scans.isEmpty()) {
                     for (com.app.model.Scan scan : scans) {
-                        String imagenUrl = scan.getImagenUrl();
-                        if (imagenUrl == null || imagenUrl.trim().isEmpty()) {
-                            imagenUrl = "images/default-scan.svg";
-                        }
+                        // Usar la URL del servlet de imágenes para cargar desde BLOB
+                        String imagenUrl = "imagen/scan/" + scan.getId();
             %>
             <div class="scan-card">
                 <div class="card-image">

@@ -1,12 +1,11 @@
 package com.app.controller;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 
 import static com.app.constants.AppConstants.ACTION_CREATE;
 import static com.app.constants.AppConstants.PARAM_ACTION;
@@ -16,6 +15,7 @@ import com.app.dao.CapituloDAO;
 import com.app.dao.MangaDAO;
 import com.app.model.AdminScan;
 import com.app.model.Capitulo;
+import com.app.model.CapituloImagen;
 import com.app.model.Manga;
 
 import jakarta.servlet.ServletException;
@@ -33,7 +33,6 @@ import jakarta.servlet.http.Part;
 )
 public class CapituloServlet extends BaseAuthenticatedServlet {
     private static final long serialVersionUID = 1L;
-    private static final String UPLOAD_DIR = "images" + File.separator + "capitulos";
 
     private final CapituloDAO capituloDAO = new CapituloDAO();
     private final MangaDAO mangaDAO = new MangaDAO();
@@ -120,28 +119,33 @@ public class CapituloServlet extends BaseAuthenticatedServlet {
             capitulo.setDescripcion(descripcion);
             capitulo.setManga(manga);
 
+            // Procesar imágenes como BLOB
             Collection<Part> imageParts = request.getParts();
-            List<String> imageUrls = new ArrayList<>();
+            List<CapituloImagen> imagenes = new ArrayList<>();
 
             for (Part part : imageParts) {
                 if ("imagenes".equals(part.getName()) && part.getSize() > 0) {
-                    String imageUrl = guardarImagen(part, request);
-                    if (imageUrl != null) {
-                        imageUrls.add(imageUrl);
+                    CapituloImagen imagen = procesarImagenBlob(part);
+                    if (imagen != null) {
+                        imagenes.add(imagen);
                     }
                 }
             }
 
-            if (imageUrls.isEmpty()) {
+            if (imagenes.isEmpty()) {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Se requiere al menos una imagen");
                 return;
             }
 
-            capitulo.setImagenesUrls(imageUrls);
+            // Agregar imágenes al capítulo
+            for (CapituloImagen imagen : imagenes) {
+                capitulo.agregarImagen(imagen);
+            }
 
             boolean success = capituloDAO.guardar(capitulo);
 
             if (success) {
+                System.out.println("DEBUG: Capítulo creado exitosamente con " + imagenes.size() + " imágenes BLOB");
                 response.sendRedirect(request.getContextPath() + "/manga?scanId=" + scanIdParam);
             } else {
                 response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error al crear el capítulo");
@@ -155,27 +159,48 @@ public class CapituloServlet extends BaseAuthenticatedServlet {
         }
     }
 
-    private String guardarImagen(Part filePart, HttpServletRequest request) throws IOException {
-        String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
-        String mimeType = filePart.getContentType();
-
-        if (mimeType != null && mimeType.startsWith("image/")) {
-            String fileExtension = fileName.substring(fileName.lastIndexOf("."));
-            String uniqueFileName = UUID.randomUUID().toString() + fileExtension;
-            String applicationPath = request.getServletContext().getRealPath("");
-            String uploadFilePath = applicationPath + File.separator + UPLOAD_DIR;
-
-            File uploadDir = new File(uploadFilePath);
-            if (!uploadDir.exists()) {
-                uploadDir.mkdirs();
+    /**
+     * Procesa una imagen y la convierte a BLOB
+     */
+    private CapituloImagen procesarImagenBlob(Part filePart) {
+        try {
+            long fileSize = filePart.getSize();
+            String fileName = filePart.getSubmittedFileName();
+            String mimeType = filePart.getContentType();
+            
+            if (fileSize > 0) {
+                if (fileName != null && !fileName.trim().isEmpty()) {
+                    fileName = Paths.get(fileName).getFileName().toString();
+                    
+                    // Validar que sea una imagen válida
+                    if (com.app.util.ImagenUtil.validarImagen(mimeType, fileSize)) {
+                        // Leer los bytes de la imagen
+                        try (InputStream inputStream = filePart.getInputStream()) {
+                            byte[] imageBytes = inputStream.readAllBytes();
+                            
+                            // Verificar que se leyeron bytes
+                            if (imageBytes != null && imageBytes.length > 0) {
+                                // Crear objeto CapituloImagen
+                                CapituloImagen imagen = new CapituloImagen();
+                                imagen.setImagenBlob(imageBytes);
+                                imagen.setImagenTipo(mimeType);
+                                imagen.setImagenNombre(fileName);
+                                
+                                System.out.println("DEBUG: Imagen procesada para capítulo - " + fileName + " (" + imageBytes.length + " bytes)");
+                                return imagen;
+                            } else {
+                                System.err.println("ERROR: No se pudieron leer bytes de la imagen");
+                            }
+                        }
+                    } else {
+                        System.err.println("ERROR: Imagen inválida - " + fileName + " (Tipo: " + mimeType + ", Tamaño: " + fileSize + " bytes)");
+                    }
+                }
             }
-
-            String filePath = uploadFilePath + File.separator + uniqueFileName;
-            filePart.write(filePath);
-
-            return UPLOAD_DIR.replace(File.separator, "/") + "/" + uniqueFileName;
+        } catch (Exception e) {
+            System.err.println("ERROR al procesar imagen del capítulo: " + e.getMessage());
+            e.printStackTrace();
         }
-
         return null;
     }
 }

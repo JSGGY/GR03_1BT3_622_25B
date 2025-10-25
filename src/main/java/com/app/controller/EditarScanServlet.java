@@ -1,9 +1,8 @@
 package com.app.controller;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Paths;
-import java.util.UUID;
 
 import static com.app.constants.AppConstants.ACTION_DELETE;
 import static com.app.constants.AppConstants.ACTION_EDIT;
@@ -29,7 +28,6 @@ import jakarta.servlet.http.Part;
 )
 public class EditarScanServlet extends BaseAuthenticatedServlet {
     private final ScanService scanService = new ScanService();
-    private static final String UPLOAD_DIR = "images" + File.separator + "scans";
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -121,35 +119,48 @@ public class EditarScanServlet extends BaseAuthenticatedServlet {
         }
     }
 
+    /**
+     * Procesa y actualiza la imagen del scan como BLOB si está presente
+     */
     private void updateImageIfPresent(HttpServletRequest request, Scan scan) {
         try {
             Part filePart = request.getPart("nuevaImagen");
-            if (filePart != null && filePart.getSize() > 0) {
-                String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+            
+            if (filePart != null) {
+                long fileSize = filePart.getSize();
+                String fileName = filePart.getSubmittedFileName();
                 String mimeType = filePart.getContentType();
-
-                if (mimeType != null && mimeType.startsWith("image/")) {
-                    String fileExtension = fileName.substring(fileName.lastIndexOf("."));
-                    String uniqueFileName = UUID.randomUUID().toString() + fileExtension;
-
-                    String applicationPath = request.getServletContext().getRealPath("");
-                    String uploadFilePath = applicationPath + File.separator + UPLOAD_DIR;
-
-                    File uploadDir = new File(uploadFilePath);
-                    if (!uploadDir.exists()) {
-                        uploadDir.mkdirs();
+                
+                if (fileSize > 0) {
+                    if (fileName != null && !fileName.trim().isEmpty()) {
+                        fileName = Paths.get(fileName).getFileName().toString();
+                        
+                        // Validar que sea una imagen válida
+                        if (com.app.util.ImagenUtil.validarImagen(mimeType, fileSize)) {
+                            // Leer los bytes de la imagen
+                            try (InputStream inputStream = filePart.getInputStream()) {
+                                byte[] imageBytes = inputStream.readAllBytes();
+                                
+                                // Verificar que se leyeron bytes
+                                if (imageBytes != null && imageBytes.length > 0) {
+                                    // Guardar en BLOB
+                                    scan.setImagenBlob(imageBytes);
+                                    scan.setImagenTipo(mimeType);
+                                    scan.setImagenNombre(fileName);
+                                    
+                                    System.out.println("DEBUG: Nueva imagen procesada para scan - " + fileName + " (" + imageBytes.length + " bytes)");
+                                } else {
+                                    System.err.println("ERROR: No se pudieron leer bytes de la imagen");
+                                }
+                            }
+                        } else {
+                            System.err.println("ERROR: Imagen inválida - " + fileName + " (Tipo: " + mimeType + ", Tamaño: " + fileSize + " bytes)");
+                        }
                     }
-
-                    String filePath = uploadFilePath + File.separator + uniqueFileName;
-                    filePart.write(filePath);
-                    String nuevaImagenUrl = UPLOAD_DIR.replace(File.separator, "/") + "/" + uniqueFileName;
-                    scan.setImagenUrl(nuevaImagenUrl);
-
-                    System.out.println("DEBUG: Nueva imagen guardada: " + nuevaImagenUrl);
                 }
             }
         } catch (Exception e) {
-            System.out.println("ERROR: Error al procesar nueva imagen: " + e.getMessage());
+            System.err.println("ERROR al procesar nueva imagen del scan: " + e.getMessage());
         }
     }
 }

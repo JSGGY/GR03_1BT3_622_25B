@@ -3,8 +3,12 @@ package com.app.controller;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import com.app.dao.CapituloImagenDAO;
 import com.app.dao.MangaDAO;
+import com.app.dao.ScanDAO;
+import com.app.model.CapituloImagen;
 import com.app.model.Manga;
+import com.app.model.Scan;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -16,6 +20,8 @@ import jakarta.servlet.http.HttpServletResponse;
 public class ImagenServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private final MangaDAO mangaDAO = new MangaDAO();
+    private final ScanDAO scanDAO = new ScanDAO();
+    private final CapituloImagenDAO capituloImagenDAO = new CapituloImagenDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -42,6 +48,10 @@ public class ImagenServlet extends HttpServlet {
             
             if ("manga".equals(tipoImagen)) {
                 servirImagenManga(id, response);
+            } else if ("scan".equals(tipoImagen)) {
+                servirImagenScan(id, response);
+            } else if ("capitulo".equals(tipoImagen)) {
+                servirImagenCapitulo(id, response);
             } else {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Tipo de imagen no soportado");
             }
@@ -69,6 +79,62 @@ public class ImagenServlet extends HttpServlet {
         // Escribir los bytes de la imagen
         try (OutputStream out = response.getOutputStream()) {
             out.write(manga.getPortadaBlob());
+            out.flush();
+        }
+    }
+
+    private void servirImagenScan(int scanId, HttpServletResponse response) throws IOException {
+        Scan scan = scanDAO.buscarPorId(scanId);
+        
+        if (scan == null || scan.getImagenBlob() == null) {
+            // Enviar un error 404 en lugar de redirigir
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Imagen no encontrada");
+            return;
+        }
+
+        // Configurar headers para la imagen
+        response.setContentType(scan.getImagenTipo() != null ? scan.getImagenTipo() : "image/jpeg");
+        response.setContentLength(scan.getImagenBlob().length);
+        
+        // Configurar cache headers
+        response.setHeader("Cache-Control", "max-age=3600"); // 1 hora de cache
+        
+        // Escribir los bytes de la imagen
+        try (OutputStream out = response.getOutputStream()) {
+            out.write(scan.getImagenBlob());
+            out.flush();
+        }
+    }
+
+    private void servirImagenCapitulo(int capituloImagenId, HttpServletResponse response) throws IOException {
+        System.out.println("DEBUG ImagenServlet: Solicitando imagen de capítulo con ID: " + capituloImagenId);
+        
+        CapituloImagen capituloImagen = capituloImagenDAO.buscarPorId(capituloImagenId);
+        
+        if (capituloImagen == null) {
+            System.err.println("ERROR: CapituloImagen con ID " + capituloImagenId + " NO existe en la BD");
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Imagen no encontrada");
+            return;
+        }
+        
+        if (capituloImagen.getImagenBlob() == null) {
+            System.err.println("ERROR: CapituloImagen ID " + capituloImagenId + " existe pero imagenBlob es NULL");
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Imagen no encontrada");
+            return;
+        }
+        
+        System.out.println("DEBUG: CapituloImagen ID " + capituloImagenId + " encontrada, tamaño: " + capituloImagen.getImagenBlob().length + " bytes");
+
+        // Configurar headers para la imagen
+        response.setContentType(capituloImagen.getImagenTipo() != null ? capituloImagen.getImagenTipo() : "image/jpeg");
+        response.setContentLength(capituloImagen.getImagenBlob().length);
+        
+        // Configurar cache headers
+        response.setHeader("Cache-Control", "max-age=3600"); // 1 hora de cache
+        
+        // Escribir los bytes de la imagen
+        try (OutputStream out = response.getOutputStream()) {
+            out.write(capituloImagen.getImagenBlob());
             out.flush();
         }
     }

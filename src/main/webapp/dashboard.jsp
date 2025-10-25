@@ -52,10 +52,8 @@
                 java.util.List<com.app.model.Scan> scans = (java.util.List<com.app.model.Scan>) request.getAttribute("scans");
                 if (scans != null && !scans.isEmpty()) {
                     for (com.app.model.Scan scan : scans) {
-                        String imagenUrl = scan.getImagenUrl();
-                        if (imagenUrl == null || imagenUrl.trim().isEmpty()) {
-                            imagenUrl = "images/default-scan.svg";
-                        }
+                        // Usar la URL del servlet de imágenes para cargar desde BLOB
+                        String imagenUrl = "imagen/scan/" + scan.getId();
             %>
             <div class="scan-card">
                 <div class="card-image">
