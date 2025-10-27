@@ -21,6 +21,7 @@
         <div class="header-actions">
             <% if (isLectorAutenticado != null && isLectorAutenticado) { %>
                 <!-- Lector autenticado -->
+                <a href="perfil" class="btn-primary" style="margin-right: 10px;">👤 Mi Perfil</a>
                 <a href="logout" class="btn-secondary">Cerrar Sesión</a>
             <% } else { %>
                 <!-- Invitado sin autenticar -->

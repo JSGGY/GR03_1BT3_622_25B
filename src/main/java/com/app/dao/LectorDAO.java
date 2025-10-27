@@ -99,5 +99,35 @@ public class LectorDAO {
     public java.util.List<Lector> buscarSeguidoresPorManga(int mangaId) {
         return new java.util.ArrayList<>();
     }
+
+    /**
+     * Actualiza un lector existente en la base de datos.
+     * Usa merge de JPA para sincronizar el estado del objeto con la BD.
+     * 
+     * @param lector Lector con los datos actualizados
+     * @return true si la actualización fue exitosa, false en caso contrario
+     */
+    public boolean actualizar(Lector lector) {
+        EntityManager em = emf.createEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.merge(lector);
+            em.getTransaction().commit();
+            
+            System.out.println("DEBUG: Lector actualizado - ID: " + lector.getId() +
+                    ", Username: " + lector.getUsername() +
+                    ", Email: " + lector.getCorreo());
+            
+            return true;
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            System.err.println("ERROR actualizando Lector: " + e.getMessage());
+            return false;
+        } finally {
+            em.close();
+        }
+    }
 }
 
