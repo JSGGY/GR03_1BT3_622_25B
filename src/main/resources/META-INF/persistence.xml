@@ -18,16 +18,17 @@
         <properties>
             <!-- PROPIEDADES PARA JAKARTA EE -->
             <property name="jakarta.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
-            <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/adminscan?useSSL=false&amp;maxAllowedPacket=67108864"/>
-
-            <!--  value="jdbc:mysql://${DB_HOST:localhost}:3306/adminscan"/>-->
-
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/adminscan?useSSL=false&amp;serverTimezone=UTC&amp;allowPublicKeyRetrieval=true"/>
             <property name="jakarta.persistence.jdbc.user" value="root"/>
+            <!-- CORREGIDO: La contraseña debe ser "root" según tu compose.yaml -->
             <property name="jakarta.persistence.jdbc.password" value=""/>
 
-            <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL8Dialect"/>
-            <property name="hibernate.hbm2ddl.auto" value="none"/>
+            <!-- Cambiado a MySQLDialect (MySQL8Dialect está deprecado) -->
+            <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
+            <!-- Cambiado a "update" para que Hibernate pueda crear/actualizar tablas si es necesario -->
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
             <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
         </properties>
     </persistence-unit>
 </persistence>

@@ -25,7 +25,7 @@ services:
       DB_PORT: 3306
       DB_NAME: adminscan
       DB_USER: root
-      DB_PASS: root
+
     networks:
       - adminsan_net
 
