@@ -7,14 +7,19 @@ import com.app.model.Scan;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 
 public class ScanDAO {
-    private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("AdminScanPU");
-
+    
+    /**
+     * Obtiene el EntityManagerFactory de manera lazy a través del provider.
+     * Esto permite que los tests configuren una unidad de persistencia diferente.
+     */
+    private EntityManagerFactory getEmf() {
+        return EntityManagerFactoryProvider.getEntityManagerFactory();
+    }
 
     public Scan buscarPorId(int id) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             return em.find(Scan.class, id);
         } finally {
@@ -23,7 +28,7 @@ public class ScanDAO {
     }
 
     public List<Scan> buscarPorAdminScan(int adminScanId) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             List<Scan> result = em.createQuery(
                 "SELECT DISTINCT s FROM Scan s LEFT JOIN FETCH s.mangas WHERE s.creadoPor.id = :adminId", Scan.class)
@@ -37,7 +42,7 @@ public class ScanDAO {
     }
 
     public List<Scan> listarTodos() {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             List<Scan> scans = em.createQuery("SELECT s FROM Scan s", Scan.class).getResultList();
             for (Scan s : scans) {
@@ -67,7 +72,7 @@ public class ScanDAO {
     }
 
     private void executeTransaction(Consumer<EntityManager> action) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             em.getTransaction().begin();
             action.accept(em);

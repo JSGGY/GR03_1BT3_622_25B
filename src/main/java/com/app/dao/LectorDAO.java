@@ -5,16 +5,22 @@ import com.app.model.Lector;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.NoResultException;
-import jakarta.persistence.Persistence;
 
 public class LectorDAO {
-    private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("AdminScanPU");
+    
+    /**
+     * Obtiene el EntityManagerFactory de manera lazy a través del provider.
+     * Esto permite que los tests configuren una unidad de persistencia diferente.
+     */
+    private EntityManagerFactory getEmf() {
+        return EntityManagerFactoryProvider.getEntityManagerFactory();
+    }
 
     /**
      * Busca un lector por nombre de usuario y contraseña
      */
     public Lector findByUsernameAndPassword(String username, String password) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             return em.createQuery(
                             "SELECT l FROM Lector l WHERE l.username = :username AND l.contraseña = :password",
@@ -33,7 +39,7 @@ public class LectorDAO {
      * Busca un lector por su ID
      */
     public Lector buscarPorId(int id) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             return em.find(Lector.class, id);
         } finally {
@@ -45,7 +51,7 @@ public class LectorDAO {
      * Verifica si ya existe un lector con el mismo nombre o correo
      */
     public boolean existePorUsernameOEmail(String username, String email) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             Long count = em.createQuery(
                             "SELECT COUNT(l) FROM Lector l WHERE l.username = :username OR l.correo = :email",
@@ -64,7 +70,7 @@ public class LectorDAO {
      * Guarda un lector y retorna el objeto guardado con su ID generado
      */
     public Lector guardar(Lector lector) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             em.getTransaction().begin();
 
@@ -108,7 +114,7 @@ public class LectorDAO {
      * @return true si la actualización fue exitosa, false en caso contrario
      */
     public boolean actualizar(Lector lector) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             em.getTransaction().begin();
             em.merge(lector);

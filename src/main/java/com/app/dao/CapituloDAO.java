@@ -7,13 +7,16 @@ import com.app.model.Capitulo;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
-import jakarta.persistence.Persistence;
-import jakarta.persistence.TypedQuery;
 
 public class CapituloDAO {
 
-    private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("AdminScanPU");
-
+    /**
+     * Obtiene el EntityManagerFactory de manera lazy a través del provider.
+     * Esto permite que los tests configuren una unidad de persistencia diferente.
+     */
+    private EntityManagerFactory getEmf() {
+        return EntityManagerFactoryProvider.getEntityManagerFactory();
+    }
 
     public boolean guardar(Capitulo capitulo) {
         return ejecutarTransaccion(em -> em.persist(capitulo));
@@ -31,7 +34,7 @@ public class CapituloDAO {
     }
 
     private boolean ejecutarTransaccion(java.util.function.Consumer<EntityManager> accion) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         EntityTransaction tx = em.getTransaction();
         try {
             tx.begin();
@@ -49,7 +52,7 @@ public class CapituloDAO {
     }
 
     public Capitulo buscarPorId(int id) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             return em.find(Capitulo.class, id);
         } finally {
@@ -58,7 +61,7 @@ public class CapituloDAO {
     }
 
     public List<Capitulo> listarTodos() {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             return em.createQuery("SELECT c FROM Capitulo c", Capitulo.class)
                      .getResultList();
@@ -68,7 +71,7 @@ public class CapituloDAO {
     }
 
     public List<Capitulo> listarPorManga(int mangaId) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             return em.createQuery(
                     "SELECT c FROM Capitulo c WHERE c.manga.id = :mangaId ORDER BY c.numero ASC",

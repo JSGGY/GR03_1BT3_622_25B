@@ -7,6 +7,7 @@ import org.junit.jupiter.api.AfterEach;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,8 +22,9 @@ import com.app.model.CapituloImagen;
 import com.app.model.EstadoManga;
 import com.app.model.Manga;
 import com.app.model.Scan;
+import com.app.test.TestHelper;
 
-@DisplayName("Test Funcional - Editar Capítulo Completo")
+@DisplayName("Test Funcional - Editar Capítulo Completo con H2 en Memoria")
 class CapituloFunctionalTest {
 
     private CapituloDAO capituloDAO;
@@ -33,6 +35,12 @@ class CapituloFunctionalTest {
     private List<Integer> capitulosALimpiar = new ArrayList<>();
     private List<Integer> mangasALimpiar = new ArrayList<>();
     private List<Integer> scansALimpiar = new ArrayList<>();
+    
+    @BeforeAll
+    static void setUpDatabase() {
+        // Configurar H2 en memoria para todos los tests
+        TestHelper.setupTestDatabase();
+    }
     
     @BeforeEach
     void setUp() {

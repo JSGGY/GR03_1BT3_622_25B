@@ -7,6 +7,7 @@ import org.junit.jupiter.api.AfterEach;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,8 +17,9 @@ import com.app.model.Capitulo;
 import com.app.model.EstadoManga;
 import com.app.model.Manga;
 import com.app.model.Scan;
+import com.app.test.TestHelper;
 
-@DisplayName("Test de Integración - MangaDAO con Base de Datos")
+@DisplayName("Test de Integración - MangaDAO con Base de Datos H2 en Memoria")
 class MangaDAOIntegrationTest {
 
     private MangaDAO mangaDAO;
@@ -27,6 +29,12 @@ class MangaDAOIntegrationTest {
 
     private List<Integer> idsALimpiar = new ArrayList<>();
     private Integer scanIdALimpiar;
+
+    @BeforeAll
+    static void setUpDatabase() {
+        // Configurar H2 en memoria para todos los tests
+        TestHelper.setupTestDatabase();
+    }
 
     @BeforeEach
     void setUp() {
@@ -121,9 +129,6 @@ class MangaDAOIntegrationTest {
 
         System.out.println("✅ Datos de prueba creados: Manga ID=" + mangaId +
                 ", Capítulos IDs=" + cap1Id + "," + cap2Id);
-
-        // Pausa para verificar datos en la base de datos
-        try {Thread.sleep(10000); } catch (InterruptedException e) {e.printStackTrace();}
 
         //Eliminar manga
         boolean resultado = mangaDAO.eliminar(mangaId);

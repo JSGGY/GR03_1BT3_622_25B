@@ -49,6 +49,14 @@
             <version>8.0.33</version>
         </dependency>
         
+        <!-- H2 Database para tests (base de datos en memoria) -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>2.2.224</version>
+            <scope>test</scope>
+        </dependency>
+        
         <!-- JUnit 5 para testing -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

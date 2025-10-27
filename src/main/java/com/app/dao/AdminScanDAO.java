@@ -1,18 +1,26 @@
 package com.app.dao;
 
-import com.app.model.AdminScan;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+
+import com.app.model.AdminScan;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.NoResultException;
-import jakarta.persistence.Persistence;
 
 public class AdminScanDAO {
-    private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("AdminScanPU");
+    
+    /**
+     * Obtiene el EntityManagerFactory de manera lazy a través del provider.
+     * Esto permite que los tests configuren una unidad de persistencia diferente.
+     */
+    private EntityManagerFactory getEmf() {
+        return EntityManagerFactoryProvider.getEntityManagerFactory();
+    }
 
     public AdminScan findByUsernameAndPassword(String username, String password) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             return em.createQuery(
                 "SELECT a FROM AdminScan a WHERE a.username = :username AND a.contraseña = :password", 
@@ -44,7 +52,7 @@ public class AdminScanDAO {
     }
 
     public AdminScan buscarPorId(int id) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             return em.find(AdminScan.class, id);
         } finally {
@@ -56,7 +64,7 @@ public class AdminScanDAO {
      * Busca un AdminScan por su email/correo
      */
     public AdminScan buscarPorEmail(String email) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             return em.createQuery(
                 "SELECT a FROM AdminScan a WHERE a.correo = :email", 
@@ -74,7 +82,7 @@ public class AdminScanDAO {
      * Verifica si existe un AdminScan con el username o email dados
      */
     public boolean existePorUsernameOEmail(String username, String email) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             Long count = em.createQuery(
                 "SELECT COUNT(a) FROM AdminScan a WHERE a.username = :username OR a.correo = :email",
@@ -93,7 +101,7 @@ public class AdminScanDAO {
      * Guarda un AdminScan y retorna el objeto guardado con su ID generado
      */
     public AdminScan guardar(AdminScan adminScan) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             em.getTransaction().begin();
             em.persist(adminScan);

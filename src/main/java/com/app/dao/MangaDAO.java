@@ -7,14 +7,20 @@ import com.app.model.Scan;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 import jakarta.persistence.TypedQuery;
 
 public class MangaDAO {
-    private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("AdminScanPU");
+    
+    /**
+     * Obtiene el EntityManagerFactory de manera lazy a través del provider.
+     * Esto permite que los tests configuren una unidad de persistencia diferente.
+     */
+    private EntityManagerFactory getEmf() {
+        return EntityManagerFactoryProvider.getEntityManagerFactory();
+    }
     
     public boolean guardar(Manga manga) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             em.getTransaction().begin();
             
@@ -39,7 +45,7 @@ public class MangaDAO {
     }
     
     public Manga buscarPorId(int id) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             return em.find(Manga.class, id);
         } finally {
@@ -48,7 +54,7 @@ public class MangaDAO {
     }
     
     public List<Manga> buscarPorScan(Scan scan) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             TypedQuery<Manga> query = em.createQuery(
                 "SELECT DISTINCT m FROM Manga m LEFT JOIN FETCH m.capitulos WHERE m.scan = :scan ORDER BY m.titulo", 
@@ -62,7 +68,7 @@ public class MangaDAO {
     }
 
     public List<Manga> buscarPorScanId(int scanId) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             TypedQuery<Manga> query = em.createQuery(
                 "SELECT DISTINCT m FROM Manga m LEFT JOIN FETCH m.capitulos WHERE m.scan.id = :scanId ORDER BY m.titulo",
@@ -76,7 +82,7 @@ public class MangaDAO {
     }
 
     public List<Manga> obtenerTodos() {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             return em.createQuery("SELECT m FROM Manga m ORDER BY m.titulo", Manga.class)
                      .getResultList();
@@ -94,7 +100,7 @@ public class MangaDAO {
      * @return true si se eliminó correctamente, false si no existe o hubo error
      */
     public boolean eliminar(int id) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             em.getTransaction().begin();
 
@@ -126,7 +132,7 @@ public class MangaDAO {
     }
     
     public boolean existeTituloEnScan(String titulo, int scanId) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             return em.createQuery(
                 "SELECT COUNT(m) FROM Manga m WHERE m.titulo = :titulo AND m.scan.id = :scanId",
@@ -140,7 +146,7 @@ public class MangaDAO {
     }
     
     public boolean existeTituloEnScanExceptoId(String titulo, int scanId, int mangaId) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             return em.createQuery(
                 "SELECT COUNT(m) FROM Manga m WHERE m.titulo = :titulo AND m.scan.id = :scanId AND m.id != :mangaId",

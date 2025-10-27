@@ -1,15 +1,19 @@
 package com.app.model;
 
-import com.app.dao.MangaDAO;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import com.app.dao.MangaDAO;
+
+@DisplayName("Test de Lógica de Negocio - Likes de Manga con Mock")
 public class MangaLikePersistenciaTest {
 
     @Test
+    @DisplayName("Given manga, when multiple users like, then total calculated correctly with mocked DAO")
     public void given_manga_when_multiple_users_like_then_total_calculated_correctly() {
         // Crear manga "real" para la lógica de likes
         Manga manga = new Manga();
@@ -23,7 +27,7 @@ public class MangaLikePersistenciaTest {
         manga.quitarLike();
         manga.quitarLike();
         assertEquals(3, manga.getTotalLikes());
-        // Mock del DAO
+        // Mock del DAO (sin inicialización estática, solo mock puro)
         MangaDAO mangaDAOMock = mock(MangaDAO.class);
         // Configurar el comportamiento del mock
         when(mangaDAOMock.buscarPorId(manga.getId())).thenReturn(manga);

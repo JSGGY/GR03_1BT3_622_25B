@@ -1,16 +1,22 @@
 package com.app.dao;
 
 import com.app.model.Usuario;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 
 public class UsuarioDAO {
 
-    private static final EntityManagerFactory emf = Persistence.createEntityManagerFactory("AdminScanPU");
+    /**
+     * Obtiene el EntityManagerFactory de manera lazy a través del provider.
+     * Esto permite que los tests configuren una unidad de persistencia diferente.
+     */
+    private EntityManagerFactory getEmf() {
+        return EntityManagerFactoryProvider.getEntityManagerFactory();
+    }
 
     public void guardar(Usuario usuario) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             em.getTransaction().begin();
             em.persist(usuario);
@@ -21,7 +27,7 @@ public class UsuarioDAO {
     }
 
     public Usuario buscarPorId(Long id) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEmf().createEntityManager();
         try {
             return em.find(Usuario.class, id);
         } finally {
