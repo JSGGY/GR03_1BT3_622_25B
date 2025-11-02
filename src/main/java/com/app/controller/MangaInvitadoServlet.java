@@ -54,6 +54,11 @@ public class MangaInvitadoServlet extends HttpServlet {
                 request.setAttribute("lector", lector);
                 request.setAttribute("isLectorAutenticado", true);
                 System.out.println("DEBUG: Lector autenticado accediendo a mangas - " + lector.getUsername());
+                
+                // Cargar listas del lector para el botón de agregar
+                com.app.service.ListaService listaService = new com.app.service.ListaService();
+                java.util.List<com.app.model.Lista> listas = listaService.obtenerListasPorLector(lector.getId());
+                request.setAttribute("listas", listas);
             } else {
                 request.setAttribute("isLectorAutenticado", false);
                 System.out.println("DEBUG: Invitado sin autenticar accediendo a mangas");

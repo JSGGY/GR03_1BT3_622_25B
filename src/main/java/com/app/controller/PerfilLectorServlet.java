@@ -1,10 +1,13 @@
 package com.app.controller;
 
 import java.io.IOException;
+import java.util.List;
 
 import static com.app.constants.AppConstants.SESSION_LECTOR;
 import com.app.dao.LectorDAO;
 import com.app.model.Lector;
+import com.app.model.Lista;
+import com.app.service.ListaService;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -29,6 +32,7 @@ import jakarta.servlet.http.HttpSession;
 public class PerfilLectorServlet extends HttpServlet {
     
     private final LectorDAO lectorDAO = new LectorDAO();
+    private final ListaService listaService = new ListaService();
     
     /**
      * GET /perfil - Muestra el formulario de perfil con los datos actuales del lector.
@@ -50,6 +54,30 @@ public class PerfilLectorServlet extends HttpServlet {
         Lector lector = (Lector) session.getAttribute(SESSION_LECTOR);
         
         System.out.println("✅ Mostrando perfil de: " + lector.getUsername());
+        
+        // Cargar las listas del lector con sus mangas
+        List<Lista> listas = listaService.obtenerListasPorLector(lector.getId());
+        // Cargar los mangas para cada lista (ya viene con fetch EAGER, pero asegurarse)
+        for (Lista lista : listas) {
+            // La relación es EAGER, pero si necesitamos inicializar
+            if (lista.getListaMangas() != null) {
+                lista.getListaMangas().size(); // Forzar carga
+            }
+        }
+        request.setAttribute("listas", listas);
+        System.out.println("DEBUG: Listas cargadas para perfil de " + lector.getUsername() + ": " + listas.size());
+        
+        // Cargar mensajes de la sesión
+        String mensaje = (String) session.getAttribute("mensaje");
+        String error = (String) session.getAttribute("error");
+        if (mensaje != null) {
+            request.setAttribute("mensaje", mensaje);
+            session.removeAttribute("mensaje");
+        }
+        if (error != null) {
+            request.setAttribute("error", error);
+            session.removeAttribute("error");
+        }
         
         // Pasar los datos del lector al JSP
         request.setAttribute("lector", lector);

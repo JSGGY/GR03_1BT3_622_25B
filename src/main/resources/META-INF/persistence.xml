@@ -14,6 +14,8 @@
         <class>com.app.model.Scan</class>
         <class>com.app.model.Manga</class>
         <class>com.app.model.Capitulo</class>
+        <class>com.app.model.Lista</class>
+        <class>com.app.model.ListaManga</class>
 
         <properties>
             <!-- PROPIEDADES PARA JAKARTA EE -->

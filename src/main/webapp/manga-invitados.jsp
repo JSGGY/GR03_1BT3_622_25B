@@ -106,6 +106,9 @@
                         <div class="card-actions">
                             <a href="mostrarCapitulos?mangaId=<%= manga.getId() %>&scanId=<%= scan.getId() %>"
                                 class="btn-primary btn-small">Leer Capítulos</a>
+                            <% if (isLectorAutenticado != null && isLectorAutenticado && lector != null) { %>
+                                <button class="btn-secondary btn-small" onclick="showAgregarAListaModal(<%= manga.getId() %>, <%= scan.getId() %>)">Agregar a Lista</button>
+                            <% } %>
                         </div>
                     </div>
                 <%
@@ -121,5 +124,121 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal para agregar manga a lista (solo para lectores autenticados) -->
+    <% if (isLectorAutenticado != null && isLectorAutenticado && lector != null) { %>
+        <%
+            java.util.List<com.app.model.Lista> listas = (java.util.List<com.app.model.Lista>) request.getAttribute("listas");
+        %>
+        <div id="agregarAListaModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Agregar Manga a Lista</h3>
+                    <button type="button" class="close-btn" onclick="hideAgregarAListaModal()">×</button>
+                </div>
+                <div style="padding: 30px;">
+                    <!-- Pestañas: Agregar a lista existente o Crear nueva -->
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #555588;">
+                        <button type="button" class="btn-secondary btn-small" onclick="showAgregarAListaTab()" id="btnAgregarTab" style="border-bottom: 2px solid #00d4ff; margin-bottom: -2px;">Agregar a Lista</button>
+                        <button type="button" class="btn-secondary btn-small" onclick="showCrearListaTab()" id="btnCrearTab">Crear Nueva Lista</button>
+                    </div>
+                    
+                    <!-- Tab: Agregar a lista existente -->
+                    <div id="agregarAListaTab">
+                        <% if (listas != null && !listas.isEmpty()) { %>
+                            <form id="agregarAListaForm" method="post" action="agregarMangaALista">
+                                <input type="hidden" id="mangaIdInput" name="mangaId" value="">
+                                <input type="hidden" name="scanId" value="<%= scan.getId() %>">
+                                <div class="form-group">
+                                    <label for="listaSelect">Selecciona una lista:</label>
+                                    <select id="listaSelect" name="listaId" required>
+                                        <option value="">-- Selecciona una lista --</option>
+                                        <% for (com.app.model.Lista lista : listas) { %>
+                                            <option value="<%= lista.getId() %>"><%= lista.getNombre() %> (<%= lista.getTotalMangas() %> mangas)</option>
+                                        <% } %>
+                                    </select>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn-primary">Agregar</button>
+                                    <button type="button" class="btn-secondary" onclick="hideAgregarAListaModal()">Cancelar</button>
+                                </div>
+                            </form>
+                        <% } else { %>
+                            <p style="color: #aaa; text-align: center; padding: 20px;">No tienes listas creadas. Crea una nueva lista usando la pestaña "Crear Nueva Lista".</p>
+                            <div class="form-actions">
+                                <button type="button" class="btn-secondary" onclick="hideAgregarAListaModal()">Cerrar</button>
+                            </div>
+                        <% } %>
+                    </div>
+                    
+                    <!-- Tab: Crear nueva lista -->
+                    <div id="crearListaTab" style="display: none;">
+                        <form id="crearListaForm" method="post" action="lista">
+                            <input type="hidden" name="action" value="crear">
+                            <input type="hidden" id="mangaIdParaCrear" name="mangaIdParaAgregar" value="">
+                            <input type="hidden" name="scanIdParaAgregar" value="<%= scan.getId() %>">
+                            <div class="form-group">
+                                <label for="nombreListaModal">Nombre de la Lista:</label>
+                                <input type="text" id="nombreListaModal" name="nombre" required placeholder="Ej: Mi Lista de Favoritos">
+                            </div>
+                            <div class="form-group">
+                                <label for="descripcionListaModal">Descripción (opcional):</label>
+                                <textarea id="descripcionListaModal" name="descripcion" rows="2" placeholder="Describe tu lista..."></textarea>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn-primary">Crear y Agregar</button>
+                                <button type="button" class="btn-secondary" onclick="hideAgregarAListaModal()">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <% } %>
+
+    <script>
+    function showAgregarAListaModal(mangaId, scanId) {
+        document.getElementById('mangaIdInput').value = mangaId;
+        document.getElementById('mangaIdParaCrear').value = mangaId;
+        var modal = document.getElementById('agregarAListaModal');
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+        showAgregarAListaTab();
+    }
+
+    function hideAgregarAListaModal() {
+        var modal = document.getElementById('agregarAListaModal');
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+        if (document.getElementById('agregarAListaForm')) {
+            document.getElementById('agregarAListaForm').reset();
+        }
+        if (document.getElementById('crearListaForm')) {
+            document.getElementById('crearListaForm').reset();
+        }
+    }
+
+    function showAgregarAListaTab() {
+        document.getElementById('agregarAListaTab').style.display = 'block';
+        document.getElementById('crearListaTab').style.display = 'none';
+        document.getElementById('btnAgregarTab').style.borderBottom = '2px solid #00d4ff';
+        document.getElementById('btnCrearTab').style.borderBottom = 'none';
+    }
+
+    function showCrearListaTab() {
+        document.getElementById('agregarAListaTab').style.display = 'none';
+        document.getElementById('crearListaTab').style.display = 'block';
+        document.getElementById('btnAgregarTab').style.borderBottom = 'none';
+        document.getElementById('btnCrearTab').style.borderBottom = '2px solid #00d4ff';
+    }
+
+    // Cerrar modal al hacer clic fuera de él
+    window.onclick = function(event) {
+        var modal = document.getElementById('agregarAListaModal');
+        if (event.target == modal) {
+            hideAgregarAListaModal();
+        }
+    }
+    </script>
 </body>
 </html>

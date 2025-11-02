@@ -29,6 +29,7 @@
             <% } %>
         </div>
     </div>
+
     <div class="scans-container">
         <h2>Scans Disponibles</h2>
 
