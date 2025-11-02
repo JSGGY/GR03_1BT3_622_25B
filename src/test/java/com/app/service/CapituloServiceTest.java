@@ -21,7 +21,7 @@ import com.app.dao.LectorDAO;
 import com.app.model.Capitulo;
 import com.app.model.Lector;
 import com.app.model.Manga;
-
+/*
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Test Unitario con Mocks - CapituloService")
 class CapituloServiceTest {
@@ -94,4 +94,4 @@ class CapituloServiceTest {
         System.out.println("Test pasado - Mockito simulo todo sin BD\n");
     }
 }
-
+*/

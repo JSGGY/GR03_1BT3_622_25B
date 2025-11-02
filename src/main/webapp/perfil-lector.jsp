@@ -223,54 +223,19 @@
             <!-- Sección Favoritos -->
             <div class="section-card">
                 <h3>⭐ Favoritos</h3>
-                <div class="favoritos-container">
-                    <!-- Si no hay favoritos -->
-                    <c:if test="${empty favoritos}">
-                        <div class="empty-state">
-                            <p>📚 Aún no tienes mangas en tus favoritos</p>
-                            <p style="font-size: 12px; margin-top: 10px;">Explora el catálogo y agrega tus favoritos</p>
-                        </div>
-                    </c:if>
-
-                    <!-- Si hay mangas favoritos -->
-                    <c:forEach var="manga" items="${favoritos}">
-                        <div class="manga-card">
-                            <!-- Imagen desde el blob codificado en Base64 -->
-                            <c:if test="${not empty manga.portadaBlob}">
-                                <img src="data:${manga.portadaTipo};base64,${fn:escapeXml(Base64.getEncoder().encodeToString(manga.portadaBlob))}"
-                                     alt="${manga.titulo}" class="manga-img" />
-                            </c:if>
-                            <c:if test="${empty manga.portadaBlob}">
-                                <img src="resources/img/default-cover.jpg" alt="Sin portada" class="manga-img" />
-                            </c:if>
-
-                            <div class="manga-info">
-                                <h4>${manga.titulo}</h4>
-                                <p style="font-size: 13px;">Capítulos: ${manga.totalCapitulos}</p>
-                                <p style="font-size: 12px; color: #555;">${manga.descripcion}</p>
-
-                                <!-- Formulario para eliminar de favoritos -->
-                                <form action="favoritos" method="post">
-                                    <input type="hidden" name="action" value="eliminar">
-                                    <input type="hidden" name="mangaId" value="${manga.id}">
-                                    <button type="submit" class="btn-danger btn-small">
-                                        🗑️ Eliminar de Favoritos
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </c:forEach>
+                <div class="empty-state">
+                    <p>📚 Aún no tienes mangas favoritos</p>
+                    <p style="font-size: 12px; margin-top: 10px;">Explora el catálogo y agrega tus favoritos</p>
                 </div>
-
             </div>
-
+            
             <!-- Sección Listas -->
             <div class="section-card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h3>📋 Mis Listas</h3>
                     <button class="btn-primary btn-small" onclick="showCreateListaForm()">+ Crear Lista</button>
                 </div>
-                
+
                 <!-- Mensajes de éxito/error -->
                 <% if (mensaje != null) { %>
                     <div class="alert alert-success" style="margin-bottom: 15px;">
@@ -282,7 +247,7 @@
                         ❌ <%= error %>
                     </div>
                 <% } %>
-                
+
                 <!-- Formulario para crear nueva lista (oculto por defecto) -->
                 <div id="createListaForm" class="create-form hidden" style="margin-bottom: 15px; background: #2a2a3e; padding: 20px; border-radius: 10px; border: 1px solid #444;">
                     <h3 style="color: #00d4ff; margin-bottom: 15px; font-size: 1.2em;">Crear Nueva Lista</h3>
@@ -290,13 +255,13 @@
                         <input type="hidden" name="action" value="crear">
                         <div class="form-group" style="margin-bottom: 15px;">
                             <label for="nombreLista" style="display: block; margin-bottom: 5px; color: #fff; font-weight: 500;">Nombre de la Lista:</label>
-                            <input type="text" id="nombreLista" name="nombre" required 
-                                   placeholder="Ej: Mi Lista de Favoritos" 
+                            <input type="text" id="nombreLista" name="nombre" required
+                                   placeholder="Ej: Mi Lista de Favoritos"
                                    style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #555588; background: #2c2c2c; color: #fff;">
                         </div>
                         <div class="form-group" style="margin-bottom: 15px;">
                             <label for="descripcionLista" style="display: block; margin-bottom: 5px; color: #fff; font-weight: 500;">Descripción (opcional):</label>
-                            <textarea id="descripcionLista" name="descripcion" rows="2" 
+                            <textarea id="descripcionLista" name="descripcion" rows="2"
                                       placeholder="Describe tu lista..."
                                       style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #555588; background: #2c2c2c; color: #fff; resize: vertical;"></textarea>
                         </div>
@@ -306,7 +271,7 @@
                         </div>
                     </form>
                 </div>
-                
+
                 <!-- Lista de listas creadas -->
                 <%
                     java.util.List<com.app.model.Lista> listas = (java.util.List<com.app.model.Lista>) request.getAttribute("listas");
@@ -324,14 +289,14 @@
                                     </div>
                                     <button class="btn-danger btn-small" onclick="eliminarLista(<%= lista.getId() %>, '<%= lista.getNombre().replace("'", "\\'") %>')">Eliminar Lista</button>
                                 </div>
-                                
+
                                 <!-- Mangas en la lista -->
-                                <% 
+                                <%
                                     java.util.List<com.app.model.ListaManga> listaMangas = lista.getListaMangas();
                                     if (listaMangas != null && !listaMangas.isEmpty()) {
                                 %>
                                     <div style="display: flex; flex-direction: column; gap: 8px;">
-                                        <% for (com.app.model.ListaManga listaManga : listaMangas) { 
+                                        <% for (com.app.model.ListaManga listaManga : listaMangas) {
                                             com.app.model.Manga manga = listaManga.getManga();
                                             if (manga != null) {
                                         %>
@@ -339,18 +304,18 @@
                                                 <div style="flex: 1;">
                                                     <h5 style="color: #fff; margin: 0 0 3px 0; font-size: 1em; font-weight: 500;"><%= manga.getTitulo() %></h5>
                                                     <p style="color: #888; margin: 0; font-size: 0.85em;">
-                                                        <%= manga.getDescripcion() != null && !manga.getDescripcion().isEmpty() && manga.getDescripcion().length() > 100 
-                                                            ? manga.getDescripcion().substring(0, 100) + "..." 
+                                                        <%= manga.getDescripcion() != null && !manga.getDescripcion().isEmpty() && manga.getDescripcion().length() > 100
+                                                            ? manga.getDescripcion().substring(0, 100) + "..."
                                                             : (manga.getDescripcion() != null ? manga.getDescripcion() : "Sin descripción") %>
                                                     </p>
                                                 </div>
-                                                <button class="btn-danger btn-small" 
+                                                <button class="btn-danger btn-small"
                                                         onclick="eliminarMangaDeLista(<%= lista.getId() %>, <%= manga.getId() %>, '<%= manga.getTitulo().replace("'", "\\'") %>')"
                                                         style="margin-left: 10px;">
                                                     ✕ Quitar
                                                 </button>
                                             </div>
-                                        <% 
+                                        <%
                                             }
                                         } %>
                                     </div>
@@ -372,7 +337,7 @@
             </div>
         </div>
     </div>
-    
+
     <script>
     function showCreateListaForm() {
         document.getElementById('createListaForm').classList.remove('hidden');
@@ -390,17 +355,17 @@
             var form = document.createElement('form');
             form.method = 'POST';
             form.action = 'lista';
-            
+
             var actionInput = document.createElement('input');
             actionInput.type = 'hidden';
             actionInput.name = 'action';
             actionInput.value = 'eliminar';
-            
+
             var idInput = document.createElement('input');
             idInput.type = 'hidden';
             idInput.name = 'listaId';
             idInput.value = listaId;
-            
+
             form.appendChild(actionInput);
             form.appendChild(idInput);
             document.body.appendChild(form);
@@ -413,17 +378,17 @@
             var form = document.createElement('form');
             form.method = 'POST';
             form.action = 'eliminarMangaDeLista';
-            
+
             var listaIdInput = document.createElement('input');
             listaIdInput.type = 'hidden';
             listaIdInput.name = 'listaId';
             listaIdInput.value = listaId;
-            
+
             var mangaIdInput = document.createElement('input');
             mangaIdInput.type = 'hidden';
             mangaIdInput.name = 'mangaId';
             mangaIdInput.value = mangaId;
-            
+
             form.appendChild(listaIdInput);
             form.appendChild(mangaIdInput);
             document.body.appendChild(form);

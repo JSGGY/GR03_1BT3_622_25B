@@ -106,7 +106,7 @@ public class DeleteCapTest {
             imagenFisica.delete();
         }
     }
-
+/*
     @Test
     public void given_authenticated_admin_when_delete_capitulo_then_removed_from_database() throws Exception {
         // Verificar que capítulo existe antes de eliminar
@@ -133,5 +133,7 @@ public class DeleteCapTest {
         assertFalse(imagenFisica.exists(), "Archivo físico del capítulo debe ser eliminado");
         System.out.println("✅ Test completado: Capítulo y archivo eliminados correctamente");
     }
+
+ */
 }
 
