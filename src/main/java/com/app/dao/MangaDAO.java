@@ -81,16 +81,15 @@ public class MangaDAO {
         }
     }
 
-    public List<Manga> obtenerTodos() {
+    public Manga obtenerPorId(int id) {
         EntityManager em = getEmf().createEntityManager();
         try {
-            return em.createQuery("SELECT m FROM Manga m ORDER BY m.titulo", Manga.class)
-                     .getResultList();
+            return em.find(Manga.class, id);
         } finally {
             em.close();
         }
     }
-    
+
     /**
      * Elimina un manga de la base de datos.
      * Gracias a CascadeType.ALL en la relación OneToMany con Capitulo,
