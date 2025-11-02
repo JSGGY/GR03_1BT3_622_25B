@@ -44,11 +44,15 @@ public class AgregarMangaAListaServlet extends HttpServlet {
             int listaId = Integer.parseInt(listaIdParam);
             int mangaId = Integer.parseInt(mangaIdParam);
 
+            // Obtener el nombre de la lista para el mensaje
+            com.app.model.Lista lista = listaService.obtenerListaPorId(listaId);
+            String nombreLista = lista != null ? lista.getNombre() : "la lista";
+
             boolean exito = listaService.agregarMangaALista(listaId, mangaId, lector.getId());
             if (exito) {
-                request.getSession().setAttribute("mensaje", "Manga agregado a la lista exitosamente");
+                request.getSession().setAttribute("mensaje", "Manga agregado a la lista \"" + nombreLista + "\" exitosamente");
             } else {
-                request.getSession().setAttribute("error", "El manga ya está en la lista o hubo un error");
+                request.getSession().setAttribute("error", "El manga ya está en la lista \"" + nombreLista + "\" o hubo un error");
             }
         } catch (NumberFormatException e) {
             request.getSession().setAttribute("error", "ID inválido");

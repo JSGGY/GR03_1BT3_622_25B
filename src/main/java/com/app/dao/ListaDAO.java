@@ -235,20 +235,32 @@ public class ListaDAO {
     }
 
     /**
-     * Verifica si un lector tiene una lista con ese nombre
+     * Verifica si un lector tiene una lista con ese nombre (comparación case-insensitive)
      */
     public boolean existeNombreEnLector(String nombre, int lectorId) {
         EntityManager em = getEmf().createEntityManager();
         try {
-            Long count = em.createQuery(
-                "SELECT COUNT(l) FROM Lista l WHERE l.nombre = :nombre AND l.lector.id = :lectorId",
-                Long.class
-            )
-            .setParameter("nombre", nombre)
-            .setParameter("lectorId", lectorId)
-            .getSingleResult();
+            // Hacer trim y convertir a minúsculas para comparación case-insensitive
+            String nombreLimpio = nombre != null ? nombre.trim().toLowerCase() : "";
+            if (nombreLimpio.isEmpty()) {
+                return false;
+            }
 
-            return count > 0;
+            // Obtener todas las listas del lector y comparar manualmente (por si la BD no soporta LOWER)
+            TypedQuery<Lista> query = em.createQuery(
+                "SELECT l FROM Lista l WHERE l.lector.id = :lectorId",
+                Lista.class
+            );
+            query.setParameter("lectorId", lectorId);
+            List<Lista> listas = query.getResultList();
+
+            for (Lista lista : listas) {
+                if (lista.getNombre() != null && lista.getNombre().trim().toLowerCase().equals(nombreLimpio)) {
+                    return true;
+                }
+            }
+
+            return false;
         } finally {
             em.close();
         }

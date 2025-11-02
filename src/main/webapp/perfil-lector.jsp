@@ -287,7 +287,10 @@
                                         <p style="color: #aaa; margin: 0 0 5px 0; font-size: 0.9em;"><%= lista.getDescripcion() != null && !lista.getDescripcion().isEmpty() ? lista.getDescripcion() : "Sin descripción" %></p>
                                         <span style="color: #888; font-size: 0.85em;">📚 <%= lista.getTotalMangas() %> mangas</span>
                                     </div>
-                                    <button class="btn-danger btn-small" onclick="eliminarLista(<%= lista.getId() %>, '<%= lista.getNombre().replace("'", "\\'") %>')">Eliminar Lista</button>
+                                    <button class="btn-danger btn-small" 
+                                            data-lista-id="<%= lista.getId() %>" 
+                                            data-lista-nombre="<%= lista.getNombre() %>"
+                                            onclick="eliminarLista(this)">Eliminar Lista</button>
                                 </div>
 
                                 <!-- Mangas en la lista -->
@@ -310,7 +313,10 @@
                                                     </p>
                                                 </div>
                                                 <button class="btn-danger btn-small"
-                                                        onclick="eliminarMangaDeLista(<%= lista.getId() %>, <%= manga.getId() %>, '<%= manga.getTitulo().replace("'", "\\'") %>')"
+                                                        data-lista-id="<%= lista.getId() %>"
+                                                        data-manga-id="<%= manga.getId() %>"
+                                                        data-manga-titulo="<%= manga.getTitulo() %>"
+                                                        onclick="eliminarMangaDeLista(this)"
                                                         style="margin-left: 10px;">
                                                     ✕ Quitar
                                                 </button>
@@ -350,7 +356,10 @@
         document.getElementById('createListaForm').querySelector('form').reset();
     }
 
-    function eliminarLista(listaId, listaNombre) {
+    function eliminarLista(button) {
+        var listaId = button.getAttribute('data-lista-id');
+        var listaNombre = button.getAttribute('data-lista-nombre');
+        
         if (confirm('¿Estás seguro de que quieres eliminar la lista "' + listaNombre + '"? Se eliminarán todos los mangas de esta lista (solo de tu lista, no del catálogo).')) {
             var form = document.createElement('form');
             form.method = 'POST';
@@ -373,7 +382,11 @@
         }
     }
 
-    function eliminarMangaDeLista(listaId, mangaId, mangaTitulo) {
+    function eliminarMangaDeLista(button) {
+        var listaId = button.getAttribute('data-lista-id');
+        var mangaId = button.getAttribute('data-manga-id');
+        var mangaTitulo = button.getAttribute('data-manga-titulo');
+        
         if (confirm('¿Estás seguro de que quieres eliminar "' + mangaTitulo + '" de esta lista? (Solo se eliminará de tu lista, no del catálogo)')) {
             var form = document.createElement('form');
             form.method = 'POST';

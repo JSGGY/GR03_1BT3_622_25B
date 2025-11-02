@@ -42,6 +42,25 @@
             </div>
         </div>
 
+        <!-- Mensajes de éxito/error -->
+        <%
+            String mensaje = (String) session.getAttribute("mensaje");
+            String error = (String) session.getAttribute("error");
+            if (mensaje != null) {
+                session.removeAttribute("mensaje");
+        %>
+            <div class="alert alert-success" style="margin: 15px 0; padding: 12px; background: #1a4d1a; border: 1px solid #2d7a2d; border-radius: 5px; color: #90ee90;">
+                ✓ <%= mensaje %>
+            </div>
+        <% } %>
+        <% if (error != null) {
+                session.removeAttribute("error");
+        %>
+            <div class="alert alert-error" style="margin: 15px 0; padding: 12px; background: #4d1a1a; border: 1px solid #7a2d2d; border-radius: 5px; color: #ff9999;">
+                ✗ <%= error %>
+            </div>
+        <% } %>
+
         <div class="mangas-container">
             <h2>Mangas Disponibles</h2>
             <div class="mangas-grid">

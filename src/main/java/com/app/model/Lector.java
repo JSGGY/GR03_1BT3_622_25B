@@ -17,9 +17,9 @@ public class Lector extends Usuario {
     // ========================
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "lector_favoritos",
-            joinColumns = @JoinColumn(name = "lector_id"),
-            inverseJoinColumns = @JoinColumn(name = "manga_id")
+            name = "mangas_favoritos",
+            joinColumns = @JoinColumn(name = "id_lector"),
+            inverseJoinColumns = @JoinColumn(name = "id_manga")
     )
     private List<Manga> favoritos = new ArrayList<>();
 
@@ -27,7 +27,7 @@ public class Lector extends Usuario {
     // Listas de mangas
     // ========================
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinColumn(name = "lector_id") // Relación unidireccional
+    @JoinColumn(name = "id_lector") // Relación unidireccional
     private List<Lista> listas = new ArrayList<>();
 
     // ========================
