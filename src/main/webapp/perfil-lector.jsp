@@ -1,5 +1,9 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="com.app.model.Lector" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ page import="java.util.Base64" %>
+
 <%
     Lector lector = (Lector) request.getAttribute("lector");
     
@@ -219,12 +223,47 @@
             <!-- Sección Favoritos -->
             <div class="section-card">
                 <h3>⭐ Favoritos</h3>
-                <div class="empty-state">
-                    <p>📚 Aún no tienes mangas favoritos</p>
-                    <p style="font-size: 12px; margin-top: 10px;">Explora el catálogo y agrega tus favoritos</p>
+                <div class="favoritos-container">
+                    <!-- Si no hay favoritos -->
+                    <c:if test="${empty favoritos}">
+                        <div class="empty-state">
+                            <p>📚 Aún no tienes mangas en tus favoritos</p>
+                            <p style="font-size: 12px; margin-top: 10px;">Explora el catálogo y agrega tus favoritos</p>
+                        </div>
+                    </c:if>
+
+                    <!-- Si hay mangas favoritos -->
+                    <c:forEach var="manga" items="${favoritos}">
+                        <div class="manga-card">
+                            <!-- Imagen desde el blob codificado en Base64 -->
+                            <c:if test="${not empty manga.portadaBlob}">
+                                <img src="data:${manga.portadaTipo};base64,${fn:escapeXml(Base64.getEncoder().encodeToString(manga.portadaBlob))}"
+                                     alt="${manga.titulo}" class="manga-img" />
+                            </c:if>
+                            <c:if test="${empty manga.portadaBlob}">
+                                <img src="resources/img/default-cover.jpg" alt="Sin portada" class="manga-img" />
+                            </c:if>
+
+                            <div class="manga-info">
+                                <h4>${manga.titulo}</h4>
+                                <p style="font-size: 13px;">Capítulos: ${manga.totalCapitulos}</p>
+                                <p style="font-size: 12px; color: #555;">${manga.descripcion}</p>
+
+                                <!-- Formulario para eliminar de favoritos -->
+                                <form action="favoritos" method="post">
+                                    <input type="hidden" name="action" value="eliminar">
+                                    <input type="hidden" name="mangaId" value="${manga.id}">
+                                    <button type="submit" class="btn-danger btn-small">
+                                        🗑️ Eliminar de Favoritos
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </c:forEach>
                 </div>
+
             </div>
-            
+
             <!-- Sección Listas -->
             <div class="section-card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">

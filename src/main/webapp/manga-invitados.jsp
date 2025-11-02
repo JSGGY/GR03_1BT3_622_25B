@@ -102,6 +102,15 @@
                                 %>
                                 <span>📖 <%= totalCapitulos %> Capítulos</span>
                             </div>
+                            <!-- Botón Agregar a Favoritos -->
+                            <div class="card-favorite">
+                                <form action="favoritos" method="post">
+                                    <input type="hidden" name="action" value="agregar">
+                                    <input type="hidden" name="mangaId" value="<%= manga.getId() %>">
+                                    <input type="hidden" name="scanId" value="<%= scan.getId() %>">
+                                    <button type="submit" class="btn-secondary btn-small">❤️ Agregar a Favoritos</button>
+                                </form>
+                            </div>
                         </div>
                         <div class="card-actions">
                             <a href="mostrarCapitulos?mangaId=<%= manga.getId() %>&scanId=<%= scan.getId() %>"
