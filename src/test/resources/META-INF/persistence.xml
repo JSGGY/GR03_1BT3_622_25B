@@ -20,6 +20,7 @@
         <class>com.app.model.Favoritos</class>
         <class>com.app.model.Lista</class>
         <class>com.app.model.ListaManga</class>
+        <class>com.app.model.MangaLike</class>
 
         <properties>
             <!-- H2 Database en memoria para tests -->
