@@ -35,4 +35,8 @@ public class FavoritosService {
     public List<Manga> obtenerFavoritos(Lector lector) {
         return favoritosDAO.obtenerFavoritosPorLector(lector);
     }
+
+    public boolean esFavorito(Lector lector, Manga manga) {
+        return favoritosDAO.existeFavorito(lector, manga);
+    }
 }

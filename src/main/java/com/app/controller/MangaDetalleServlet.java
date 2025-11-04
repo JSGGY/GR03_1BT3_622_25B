@@ -5,12 +5,15 @@ import java.util.List;
 
 import static com.app.constants.AppConstants.SESSION_LECTOR;
 import com.app.dao.MangaDAO;
+import com.app.dao.MangaLikeDAO;
 import com.app.dao.ScanDAO;
 import com.app.model.ComentarioManga;
 import com.app.model.Lector;
 import com.app.model.Manga;
 import com.app.model.Scan;
 import com.app.service.ComentarioMangaService;
+import com.app.service.FavoritosService;
+import com.app.service.MangaLikeService;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -26,12 +29,16 @@ public class MangaDetalleServlet extends HttpServlet {
     private MangaDAO mangaDAO;
     private ScanDAO scanDAO;
     private ComentarioMangaService comentarioService;
+    private MangaLikeService mangaLikeService;
+    private FavoritosService favoritosService;
 
     @Override
     public void init() throws ServletException {
         mangaDAO = new MangaDAO();
         scanDAO = new ScanDAO();
         comentarioService = new ComentarioMangaService();
+        mangaLikeService = new MangaLikeService(new MangaDAO(), new MangaLikeDAO());
+        favoritosService = new FavoritosService();
     }
 
     @Override
@@ -62,14 +69,27 @@ public class MangaDetalleServlet extends HttpServlet {
             // Obtener comentarios del manga
             List<ComentarioManga> comentarios = comentarioService.obtenerComentariosDeMangaPorId(mangaId);
 
+            // Obtener total de likes actualizados
+            int totalLikes = mangaLikeService.obtenerTotalLikes(mangaId);
+            manga.setTotalLikes(totalLikes);
+
             // Verificar si hay un lector autenticado
             HttpSession session = request.getSession();
             Lector lector = (Lector) session.getAttribute(SESSION_LECTOR);
+
+            boolean usuarioYaDioLike = false;
+            boolean esFavorito = false;
 
             if (lector != null) {
                 request.setAttribute("lector", lector);
                 request.setAttribute("isLectorAutenticado", true);
                 System.out.println("DEBUG: Lector autenticado viendo manga - " + lector.getUsername());
+
+                // Verificar si el usuario ya dio like
+                usuarioYaDioLike = mangaLikeService.usuarioYaDioLike(mangaId, lector.getId());
+
+                // Verificar si está en favoritos
+                esFavorito = favoritosService.esFavorito(lector, manga);
 
                 // Cargar listas del lector para el botón de agregar
                 com.app.service.ListaService listaService = new com.app.service.ListaService();
@@ -85,6 +105,9 @@ public class MangaDetalleServlet extends HttpServlet {
             request.setAttribute("scan", scan);
             request.setAttribute("comentarios", comentarios);
             request.setAttribute("totalComentarios", comentarios.size());
+            request.setAttribute("totalLikes", totalLikes);
+            request.setAttribute("usuarioYaDioLike", usuarioYaDioLike);
+            request.setAttribute("esFavorito", esFavorito);
 
             // Redirigir al JSP de detalle
             request.getRequestDispatcher("manga-detalle.jsp").forward(request, response);
@@ -97,4 +120,3 @@ public class MangaDetalleServlet extends HttpServlet {
         }
     }
 }
-

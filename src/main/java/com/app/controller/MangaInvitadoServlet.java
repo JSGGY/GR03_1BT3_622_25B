@@ -10,6 +10,7 @@ import com.app.dao.ScanDAO;
 import com.app.model.Lector;
 import com.app.model.Manga;
 import com.app.model.Scan;
+import com.app.service.FavoritosService;
 import com.app.service.MangaLikeService;
 
 import jakarta.servlet.ServletException;
@@ -26,6 +27,7 @@ public class MangaInvitadoServlet extends HttpServlet {
     private MangaDAO mangaDAO = new MangaDAO();
     private ScanDAO scanDAO = new ScanDAO();
     private MangaLikeService mangaLikeService = new MangaLikeService(new MangaDAO(), new MangaLikeDAO());
+    private FavoritosService favoritosService = new FavoritosService();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -68,6 +70,9 @@ public class MangaInvitadoServlet extends HttpServlet {
                 com.app.service.ListaService listaService = new com.app.service.ListaService();
                 java.util.List<com.app.model.Lista> listas = listaService.obtenerListasPorLector(lector.getId());
                 request.setAttribute("listas", listas);
+
+                // Pasar el servicio de favoritos al JSP para verificar estados
+                request.setAttribute("favoritosService", favoritosService);
             } else {
                 request.setAttribute("isLectorAutenticado", false);
             }

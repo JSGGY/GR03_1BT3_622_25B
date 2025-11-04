@@ -7,7 +7,7 @@
 </head>
 <body class="dashboard-page">
 <div class="dashboard-container">
-    <%
+        <%
         Boolean isLectorAutenticado = (Boolean) request.getAttribute("isLectorAutenticado");
         com.app.model.Lector lector = (com.app.model.Lector) request.getAttribute("lector");
         com.app.model.Scan scan = (com.app.model.Scan) request.getAttribute("scan");
@@ -21,6 +21,11 @@
                 new com.app.dao.MangaDAO(),
                 new com.app.dao.MangaLikeDAO()
         );
+
+        com.app.service.FavoritosService favoritosService = (com.app.service.FavoritosService) request.getAttribute("favoritosService");
+        if (favoritosService == null) {
+            favoritosService = new com.app.service.FavoritosService();
+        }
     %>
     <div class="scan-header">
         <div class="scan-info">
@@ -46,7 +51,7 @@
         </div>
     </div>
 
-    <%
+        <%
         String mensaje = (String) session.getAttribute("mensaje");
         String error = (String) session.getAttribute("error");
         if (mensaje != null) {
@@ -55,14 +60,14 @@
     <div class="alert alert-success" style="margin: 15px 0; padding: 12px; background: #1a4d1a; border: 1px solid #2d7a2d; border-radius: 5px; color: #90ee90;">
         ✓ <%= mensaje %>
     </div>
-    <% } %>
-    <% if (error != null) {
+        <% } %>
+        <% if (error != null) {
         session.removeAttribute("error");
     %>
     <div class="alert alert-error" style="margin: 15px 0; padding: 12px; background: #4d1a1a; border: 1px solid #7a2d2d; border-radius: 5px; color: #ff9999;">
         ✗ <%= error %>
     </div>
-    <% } %>
+        <% } %>
 
     <div class="mangas-container">
         <div class="mangas-header">
@@ -91,7 +96,7 @@
         </div>
 
         <div class="mangas-grid">
-            <%
+                <%
                 if (mangas != null && !mangas.isEmpty()) {
                     for (com.app.model.Manga manga : mangas) {
                         String imagenPortada;
@@ -124,12 +129,14 @@
 
                         int totalLikes = likeService.obtenerTotalLikes(manga.getId());
                         boolean usuarioYaDioLike = false;
+                        boolean esFavorito = false;
+
                         if (lector != null) {
                             usuarioYaDioLike = likeService.usuarioYaDioLike(manga.getId(), lector.getId());
+                            esFavorito = favoritosService.esFavorito(lector, manga);
                         }
             %>
             <div class="manga-card" onclick="window.location.href='mangaDetalle?mangaId=<%= manga.getId() %>&scanId=<%= scan.getId() %>'" style="cursor: pointer; position: relative">
-            <!--HACER QUE SE MANDE A LA INFO DEL MANGA -->
                 <div class="card-image">
                     <img src="<%= imagenPortada %>"
                          alt="<%= manga.getTitulo() %>"
@@ -160,13 +167,15 @@
                         <span>📖 <%= totalCapitulos %> Capítulos</span>
                     </div>
 
-                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <div style="display: flex; gap: 10px; margin-top: 15px;" onclick="event.stopPropagation();">
                         <% if (lector != null) { %>
                         <form action="favoritos" method="post" style="flex: 1;">
-                            <input type="hidden" name="action" value="agregar">
+                            <input type="hidden" name="action" value="<%= esFavorito ? "eliminar" : "agregar" %>">
                             <input type="hidden" name="mangaId" value="<%= manga.getId() %>">
                             <input type="hidden" name="scanId" value="<%= scan.getId() %>">
-                            <button type="submit" class="btn-secondary btn-small" style="width: 100%;">❤️ Favoritos</button>
+                            <button type="submit" class="btn-secondary btn-small" style="width: 100%;">
+                                <%= esFavorito ? "💔 Quitar" : "❤️ Favoritos" %>
+                            </button>
                         </form>
 
                         <form action="mangaLike" method="post" style="flex: 1;">
@@ -182,8 +191,7 @@
                         <% } %>
                     </div>
                 </div>
-                <!-- PAra evitar que active desde cualquier boton -->
-                   <div class="card-actions" onclick="event.stopPropagation();">
+                <div class="card-actions" onclick="event.stopPropagation();">
                     <a href="mostrarCapitulos?mangaId=<%= manga.getId() %>&scanId=<%= scan.getId() %>"
                        class="btn-primary btn-small">Leer Capítulos</a>
                     <% if (isLectorAutenticado != null && isLectorAutenticado && lector != null) { %>

@@ -10,12 +10,10 @@ public class FavoritosDAO {
 
     private EntityManagerFactory emf;
 
-    // Constructor por defecto (producción)
     public FavoritosDAO() {
         this.emf = Persistence.createEntityManagerFactory("AdminScanPU");
     }
 
-    // Constructor para inyección (tests unitarios)
     public FavoritosDAO(EntityManagerFactory emf) {
         this.emf = emf;
     }
@@ -40,10 +38,12 @@ public class FavoritosDAO {
         EntityManager em = emf.createEntityManager();
         try {
             em.getTransaction().begin();
+
             TypedQuery<Favoritos> query = em.createQuery(
-                    "SELECT f FROM Favoritos f WHERE f.lector = :lector AND f.manga = :manga", Favoritos.class);
-            query.setParameter("lector", lector);
-            query.setParameter("manga", manga);
+                    "SELECT f FROM Favoritos f WHERE f.lector.id = :lectorId AND f.manga.id = :mangaId",
+                    Favoritos.class);
+            query.setParameter("lectorId", lector.getId());
+            query.setParameter("mangaId", manga.getId());
             List<Favoritos> resultados = query.getResultList();
 
             if (resultados.isEmpty()) {
@@ -67,9 +67,25 @@ public class FavoritosDAO {
         EntityManager em = emf.createEntityManager();
         try {
             TypedQuery<Manga> query = em.createQuery(
-                    "SELECT f.manga FROM Favoritos f WHERE f.lector = :lector", Manga.class);
-            query.setParameter("lector", lector);
-            return query.getResultList();
+                    "SELECT f.manga FROM Favoritos f " +
+                            "JOIN FETCH f.manga.scan " +
+                            "WHERE f.lector.id = :lectorId",
+                    Manga.class);
+            query.setParameter("lectorId", lector.getId());
+
+            List<Manga> mangas = query.getResultList();
+
+            // Inicializar el Scan para evitar LazyInitializationException
+            for (Manga manga : mangas) {
+                if (manga.getScan() != null) {
+                    manga.getScan().getNombre();
+                }
+            }
+
+            return mangas;
+        } catch (Exception e) {
+            System.err.println("❌ Error al obtener favoritos: " + e.getMessage());
+            return new java.util.ArrayList<>();
         } finally {
             em.close();
         }
@@ -79,9 +95,10 @@ public class FavoritosDAO {
         EntityManager em = emf.createEntityManager();
         try {
             TypedQuery<Long> query = em.createQuery(
-                    "SELECT COUNT(f) FROM Favoritos f WHERE f.lector = :lector AND f.manga = :manga", Long.class);
-            query.setParameter("lector", lector);
-            query.setParameter("manga", manga);
+                    "SELECT COUNT(f) FROM Favoritos f WHERE f.lector.id = :lectorId AND f.manga.id = :mangaId",
+                    Long.class);
+            query.setParameter("lectorId", lector.getId());
+            query.setParameter("mangaId", manga.getId());
             return query.getSingleResult() > 0;
         } finally {
             em.close();

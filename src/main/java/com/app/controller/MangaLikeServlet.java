@@ -28,6 +28,7 @@ public class MangaLikeServlet extends HttpServlet {
         String action = request.getParameter("action");
         String mangaIdParam = request.getParameter("mangaId");
         String scanIdParam = request.getParameter("scanId");
+        String origenParam = request.getParameter("origen");
 
         HttpSession session = request.getSession();
         Lector lector = (Lector) session.getAttribute(SESSION_LECTOR);
@@ -51,7 +52,13 @@ public class MangaLikeServlet extends HttpServlet {
                     request.getSession().setAttribute("error", "Ya diste like a este manga");
                 }
 
-                response.sendRedirect(request.getContextPath() + "/mangaInvitados?scanId=" + scanId);
+                // Si viene de mangaDetalle, redirigir de vuelta a mangaDetalle
+                if ("detalle".equals(origenParam)) {
+                    response.sendRedirect(request.getContextPath() + "/mangaDetalle?mangaId=" + mangaId + "&scanId=" + scanId);
+                } else {
+                    // Si viene de mangaInvitados, redirigir a mangaInvitados
+                    response.sendRedirect(request.getContextPath() + "/mangaInvitados?scanId=" + scanId);
+                }
                 return;
 
             } catch (NumberFormatException e) {
