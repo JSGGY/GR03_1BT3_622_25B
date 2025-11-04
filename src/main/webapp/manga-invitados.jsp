@@ -96,7 +96,10 @@
                                 break;
                         }
                 %>
-                    <div class="manga-card">
+                    <div class="manga-card" style="cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;" 
+                         onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 20px rgba(0, 212, 255, 0.3)';" 
+                         onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';"
+                         onclick="window.location.href='mangaDetalle?mangaId=<%= manga.getId() %>&scanId=<%= scan.getId() %>'">
                         <div class="card-image">
                             <img src="<%= imagenPortada %>"
                                  alt="<%= manga.getTitulo() %>"
@@ -121,19 +124,12 @@
                                 %>
                                 <span>📖 <%= totalCapitulos %> Capítulos</span>
                             </div>
-                            <!-- Botón Agregar a Favoritos -->
-                            <div class="card-favorite">
-                                <form action="favoritos" method="post">
-                                    <input type="hidden" name="action" value="agregar">
-                                    <input type="hidden" name="mangaId" value="<%= manga.getId() %>">
-                                    <input type="hidden" name="scanId" value="<%= scan.getId() %>">
-                                    <button type="submit" class="btn-secondary btn-small">❤️ Agregar a Favoritos</button>
-                                </form>
-                            </div>
                         </div>
-                        <div class="card-actions">
+                        <div class="card-actions" onclick="event.stopPropagation();">
+                            <a href="mangaDetalle?mangaId=<%= manga.getId() %>&scanId=<%= scan.getId() %>"
+                                class="btn-primary btn-small">Ver Detalles</a>
                             <a href="mostrarCapitulos?mangaId=<%= manga.getId() %>&scanId=<%= scan.getId() %>"
-                                class="btn-primary btn-small">Leer Capítulos</a>
+                                class="btn-secondary btn-small">Leer Capítulos</a>
                             <% if (isLectorAutenticado != null && isLectorAutenticado && lector != null) { %>
                                 <button class="btn-secondary btn-small" onclick="showAgregarAListaModal(<%= manga.getId() %>, <%= scan.getId() %>)">Agregar a Lista</button>
                             <% } %>
@@ -262,8 +258,9 @@
 
     // Cerrar modal al hacer clic fuera de él
     window.onclick = function(event) {
-        var modal = document.getElementById('agregarAListaModal');
-        if (event.target == modal) {
+        var modalAgregar = document.getElementById('agregarAListaModal');
+        
+        if (event.target == modalAgregar) {
             hideAgregarAListaModal();
         }
     }

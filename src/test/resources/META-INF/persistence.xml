@@ -16,6 +16,10 @@
         <class>com.app.model.Manga</class>
         <class>com.app.model.Capitulo</class>
         <class>com.app.model.CapituloImagen</class>
+        <class>com.app.model.ComentarioManga</class>
+        <class>com.app.model.Favoritos</class>
+        <class>com.app.model.Lista</class>
+        <class>com.app.model.ListaManga</class>
 
         <properties>
             <!-- H2 Database en memoria para tests -->

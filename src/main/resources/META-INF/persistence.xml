@@ -18,6 +18,7 @@
         <class>com.app.model.ListaManga</class>
         <class>com.app.model.Favoritos</class>
         <class>com.app.model.Lista</class>
+        <class>com.app.model.ComentarioManga</class>
 
 
         <properties>
