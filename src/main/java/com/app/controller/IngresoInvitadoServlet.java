@@ -6,7 +6,9 @@ import java.util.List;
 import static com.app.constants.AppConstants.SESSION_LECTOR;
 import com.app.dao.ScanDAO;
 import com.app.model.Lector;
+import com.app.model.Manga;
 import com.app.model.Scan;
+import com.app.service.HistorialVisitasService;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -34,6 +36,18 @@ public class IngresoInvitadoServlet extends HttpServlet {
             System.out.println("DEBUG: Acceso de Lector autenticado - " + lector.getUsername());
             request.setAttribute("lector", lector);
             request.setAttribute("isLectorAutenticado", true);
+
+            // ✅ Cargar mangas visitados recientemente
+            HistorialVisitasService historialService = new HistorialVisitasService();
+            List<Manga> mangasRecientes = historialService.obtenerMangasVisitadosRecientes(lector);
+
+            if (mangasRecientes != null && !mangasRecientes.isEmpty()) {
+                System.out.println("DEBUG: Se encontraron " + mangasRecientes.size() + " mangas visitados recientemente.");
+            } else {
+                System.out.println("DEBUG: No hay mangas recientes para este lector.");
+            }
+
+            request.setAttribute("mangasRecientes", mangasRecientes);
         } else {
             // Invitado sin autenticar
             System.out.println("DEBUG: Acceso de invitado sin autenticar");
@@ -48,6 +62,7 @@ public class IngresoInvitadoServlet extends HttpServlet {
         }
         request.setAttribute("scans", scans);
 
+        // Redirigir a la página de dashboard para invitados
         request.getRequestDispatcher("dashboard-invitados.jsp").forward(request, response);
     }
 }

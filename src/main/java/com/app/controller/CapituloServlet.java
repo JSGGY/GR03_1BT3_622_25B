@@ -78,6 +78,23 @@ public class CapituloServlet extends BaseAuthenticatedServlet {
             return;
         }
 
+        // Registrar visita del lector autenticado
+        jakarta.servlet.http.HttpSession session = request.getSession(false);
+        if (session != null) {
+            com.app.model.Lector lector =
+                    (com.app.model.Lector) session.getAttribute(com.app.constants.AppConstants.SESSION_LECTOR);
+            if (lector != null) {
+                com.app.model.Manga manga = mangaDAO.buscarPorId(mangaId);
+                if (manga != null) {
+                    com.app.service.HistorialVisitasService historialVisitasService = new com.app.service.HistorialVisitasService();
+                    historialVisitasService.registrarVisita(lector, manga);
+                    System.out.println("DEBUG: Historial de visitas actualizado para lector "
+                            + lector.getUsername() + " en manga ID " + mangaId);
+                }
+            }
+        }
+
+        // Obtener capítulos del manga
         List<Capitulo> capitulos = capituloDAO.listarPorManga(mangaId);
         request.setAttribute("capitulos", capitulos);
         request.setAttribute("mangaId", mangaId);

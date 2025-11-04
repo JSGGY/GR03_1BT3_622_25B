@@ -20,6 +20,7 @@
         <class>com.app.model.Lista</class>
         <class>com.app.model.ComentarioManga</class>
         <class>com.app.model.MangaLike</class>
+        <class>com.app.model.HistorialVisitas</class>
 
 
         <properties>
@@ -30,7 +31,7 @@
             <property name="jakarta.persistence.jdbc.password" value=""/>
 
             <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL8Dialect"/>
-            <property name="hibernate.hbm2ddl.auto" value="none"/>
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
             <property name="hibernate.show_sql" value="true"/>
         </properties>
     </persistence-unit>
