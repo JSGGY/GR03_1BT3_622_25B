@@ -40,10 +40,11 @@ public class IngresoInvitadoServlet extends HttpServlet {
             request.setAttribute("isLectorAutenticado", false);
         }
         
-        // Cargar todos los scans disponibles
-        List<Scan> scans = scanDAO.listarTodos();
+        // Cargar solo los scans que tienen al menos un manga
+        List<Scan> scans = scanDAO.listarScansConMangas();
+        System.out.println("DEBUG: Scans con mangas encontrados: " + scans.size());
         for (Scan scan : scans) {
-            System.out.println(scan);
+            System.out.println("  - " + scan.getNombre() + " (Mangas: " + scan.getMangas().size() + ")");
         }
         request.setAttribute("scans", scans);
 

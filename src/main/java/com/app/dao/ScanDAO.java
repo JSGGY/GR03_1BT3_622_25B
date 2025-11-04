@@ -54,6 +54,29 @@ public class ScanDAO {
         }
     }
 
+    /**
+     * Lista solo los scans que tienen al menos un manga asociado.
+     * Útil para mostrar en el dashboard de lectores/invitados.
+     * 
+     * @return Lista de scans con al menos un manga
+     */
+    public List<Scan> listarScansConMangas() {
+        EntityManager em = getEmf().createEntityManager();
+        try {
+            List<Scan> scans = em.createQuery(
+                "SELECT DISTINCT s FROM Scan s JOIN s.mangas m", 
+                Scan.class
+            ).getResultList();
+            // Inicializar la colección de mangas para evitar LazyInitializationException
+            for (Scan s : scans) {
+                s.getMangas().size();
+            }
+            return scans;
+        } finally {
+            em.close();
+        }
+    }
+
     public void guardar(Scan scan) {
         executeTransaction(em -> em.persist(scan));
     }
