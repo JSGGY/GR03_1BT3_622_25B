@@ -173,6 +173,7 @@ public class PublicarComentarioServlet extends HttpServlet {
             throws IOException {
         int mangaId = 0;
         try {
+            // Obtener IDs de comentario y manga
             int comentarioId = Integer.parseInt(request.getParameter("comentarioId"));
             mangaId = Integer.parseInt(request.getParameter("mangaId"));
 
