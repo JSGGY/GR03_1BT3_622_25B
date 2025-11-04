@@ -193,13 +193,24 @@ public class PublicarComentarioServlet extends HttpServlet {
         try {
             int comentarioId = Integer.parseInt(request.getParameter("comentarioId"));
             mangaId = Integer.parseInt(request.getParameter("mangaId"));
-            boolean eliminado = comentarioService.eliminarComentario(comentarioId);
+
+            // Obtener lector autenticado de la sesión
+            Lector lectorSesion = (Lector) request.getSession().getAttribute(SESSION_LECTOR);
+            if (lectorSesion == null) {
+                request.getSession().setAttribute("error", "❌ Debes iniciar sesión para eliminar comentarios.");
+                redirigirAlOrigen(request, response, mangaId, scanId);
+                return;
+            }
+
+            // Intentar eliminar el comentario validando propietario
+            boolean eliminado = comentarioService.eliminarComentario(comentarioId, lectorSesion);
 
             if (eliminado) {
                 request.getSession().setAttribute("mensaje", "🗑️ Comentario eliminado correctamente.");
             } else {
-                request.getSession().setAttribute("error", "⚠️ No se pudo eliminar el comentario.");
+                request.getSession().setAttribute("error", "⚠️ No puedes eliminar este comentario o no existe.");
             }
+
         } catch (NumberFormatException e) {
             request.getSession().setAttribute("error", "❌ Error: ID de comentario inválido.");
         } catch (jakarta.persistence.PersistenceException e) {
@@ -212,6 +223,7 @@ public class PublicarComentarioServlet extends HttpServlet {
 
         redirigirAlOrigen(request, response, mangaId, scanId);
     }
+
 
     /**
      * Redirige al origen correcto según el referer

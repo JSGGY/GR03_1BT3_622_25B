@@ -9,13 +9,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
-import org.mockito.Mock;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
+import org.mockito.Mock;
 import com.app.dao.ComentarioMangaDAO;
 import com.app.model.ComentarioManga;
 import com.app.model.Lector;
@@ -329,5 +328,176 @@ class ComentarioMangaServiceTest {
         assertEquals("nuevoUsuario", comentario.obtenerNombreLector(), 
             "obtenerNombreLector() debe reflejar el nuevo lector");
     }
+
+
+// ====================================================
+// TESTS HU003 - ELIMINAR COMENTARIO
+// ====================================================
+
+    /**
+     * HU003: Eliminar Comentario
+     *
+     * HISTORIA DE USUARIO:
+     * Como lector quiero poder eliminar mis propios comentarios
+     * para mantener mi perfil limpio y retirar mensajes que ya no deseo mostrar.
+     *
+     * CRITERIOS DE ACEPTACIÓN:
+     * 1️⃣ Solo debe mostrarse el botón “Eliminar” en comentarios propios.
+     * 2️⃣ El sistema debe pedir confirmación antes de eliminar.
+     * 3️⃣ Al eliminar, debe desaparecer de la vista y mostrar mensaje de éxito.
+     */
+    @Nested
+    class EliminarComentarioTest {
+
+        private ComentarioMangaDAO comentarioDAO;
+        private ComentarioMangaService comentarioService;
+        private Lector lector;
+        private Manga manga;
+        private ComentarioManga comentarioPropio;
+        private ComentarioManga comentarioAjeno;
+
+        @BeforeEach
+        void setUp() {
+            comentarioDAO = mock(ComentarioMangaDAO.class);
+            comentarioService = new ComentarioMangaService(comentarioDAO);
+
+            lector = new Lector();
+            lector.setId(1);
+            lector.setUsername("lector1");
+
+            Lector otroLector = new Lector();
+            otroLector.setId(2);
+            otroLector.setUsername("lector2");
+
+            manga = new Manga();
+            manga.setId(10);
+            manga.setTitulo("Berserk");
+
+            comentarioPropio = new ComentarioManga(manga, lector, "Mi comentario");
+            comentarioPropio.setId(100);
+
+            comentarioAjeno = new ComentarioManga(manga, otroLector, "Comentario de otro lector");
+            comentarioAjeno.setId(101);
+        }
+
+        // ====================================================
+        // TEST 1 (MOCKITO): Eliminación Exitosa
+        // ====================================================
+        /**
+         * Dado que el lector intenta eliminar su propio comentario,
+         * cuando confirma la acción,
+         * entonces el comentario debe eliminarse exitosamente y devolver true.
+         */
+        @Test
+        @DisplayName("TEST 1 (MOCKITO): Eliminación Exitosa - El lector elimina su propio comentario")
+        void testEliminarComentarioPropio_Exitoso() {
+            // DADO: Se configura un lector y un comentario simulado
+            Lector lector = new Lector();
+            lector.setId(1);
+            lector.setUsername("lectorPrueba");
+
+            ComentarioManga comentarioPropio = new ComentarioManga();
+            comentarioPropio.setId(10);
+            comentarioPropio.setLector(lector);
+            comentarioPropio.setComentario("Este es mi comentario");
+
+            // El DAO simula que la eliminación fue exitosa
+            when(comentarioDAO.buscarPorId(comentarioPropio.getId())).thenReturn(comentarioPropio);
+            when(comentarioDAO.eliminar(comentarioPropio.getId())).thenReturn(true);
+
+            // CUANDO: El servicio intenta eliminar el comentario
+            boolean resultado = comentarioService.eliminarComentario(comentarioPropio.getId(), lector);
+
+            // ENTONCES: La eliminación debe ser exitosa
+            assertTrue(resultado, "El método debe retornar true si el comentario se elimina correctamente");
+
+            // Verificar que el DAO fue llamado con el ID correcto
+            verify(comentarioDAO, times(1)).eliminar(comentarioPropio.getId());
+        }
+
+        // ====================================================
+        // TEST 2 (UNITARIO): No puede eliminar comentario ajeno
+        // ====================================================
+        /**
+         * Dado que el lector visualiza comentarios de otros usuarios,
+         * cuando intenta eliminar uno que no le pertenece,
+         * entonces el sistema no debe permitirlo y debe retornar false.
+         */
+        @Test
+        @DisplayName("TEST 2 (UNITARIO): No puede eliminar comentarios ajenos")
+        void testEliminarComentarioAjeno() {
+            // CUANDO: Un lector intenta eliminar un comentario ajeno
+            boolean resultado = comentarioService.eliminarComentario(comentarioAjeno.getId(), lector);
+
+            // ENTONCES: La eliminación debe fallar
+            assertFalse(resultado, "El lector no debe poder eliminar comentarios que no le pertenecen");
+
+            // Verificar que el DAO nunca fue invocado
+            verify(comentarioDAO, never()).eliminar(any(Integer.class));
+        }
+
+        // ====================================================
+        // TEST 3 (UNITARIO): Confirmación antes de eliminar
+        // ====================================================
+        /**
+         * Dado que el lector intenta eliminar su comentario,
+         * cuando el sistema solicita confirmación,
+         * entonces el comentario solo debe eliminarse si confirma.
+         */
+        @Test
+        @DisplayName("TEST 3 (UNITARIO): Confirmación requerida antes de eliminar")
+        void testConfirmacionAntesDeEliminar() {
+            // Simular confirmación (true)
+            boolean confirmacionUsuario = true;
+            when(comentarioDAO.eliminar(comentarioPropio.getId())).thenReturn(true);
+
+            // CUANDO: El lector confirma la eliminación
+            boolean resultadoConfirmado = comentarioService.eliminarComentarioConConfirmacion(
+                    lector, comentarioPropio.getId(), confirmacionUsuario
+            );
+
+            // ENTONCES: Se debe eliminar correctamente
+            assertTrue(resultadoConfirmado, "Debe eliminar el comentario si el lector confirma la acción");
+
+            // Simular cancelación (false)
+            boolean resultadoCancelado = comentarioService.eliminarComentarioConConfirmacion(
+                    lector, comentarioPropio.getId(), false
+            );
+
+            // ENTONCES: No debe eliminarse si el lector cancela
+            assertFalse(resultadoCancelado, "No debe eliminar el comentario si el lector cancela");
+        }
+    }
+// ====================================================
+// TEST 4 (UNITARIO): No elimina comentario sin lector asignado
+// ====================================================
+    /**
+     * Dado que un comentario no tiene lector asociado,
+     * cuando se intenta eliminar,
+     * entonces el sistema no debe permitirlo y debe retornar false.
+     */
+    @Test
+    @DisplayName("TEST 4 (UNITARIO): No elimina comentario sin lector asociado")
+    void testEliminarComentarioSinLector() {
+        // DADO: Comentario sin lector
+        ComentarioManga comentarioSinLector = new ComentarioManga();
+        comentarioSinLector.setId(200);
+        comentarioSinLector.setLector(null);
+        comentarioSinLector.setComentario("Comentario huérfano");
+
+        // El DAO devuelve el comentario sin lector
+        when(comentarioDAO.buscarPorId(comentarioSinLector.getId())).thenReturn(comentarioSinLector);
+
+        // CUANDO: El lector intenta eliminarlo
+        boolean resultado = comentarioService.eliminarComentario(comentarioSinLector.getId(), lector);
+
+        // ENTONCES: No debe eliminarse
+        assertFalse(resultado, "Debe retornar false si el comentario no tiene lector asociado");
+
+        // Verificar que el DAO nunca intente eliminar
+        verify(comentarioDAO, never()).eliminar(any(Integer.class));
+    }
+
+
 }
 

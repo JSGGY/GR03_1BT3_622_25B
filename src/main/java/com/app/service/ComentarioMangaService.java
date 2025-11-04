@@ -67,13 +67,41 @@ public class ComentarioMangaService {
     }
 
     /**
-     * Elimina un comentario
-     * 
+     * Elimina un comentario solo si pertenece al lector autenticado.
+     *
      * @param comentarioId ID del comentario a eliminar
+     * @param lectorActual Lector autenticado
      * @return true si se eliminó correctamente, false en caso contrario
      */
-    public boolean eliminarComentario(int comentarioId) {
+    public boolean eliminarComentario(int comentarioId, Lector lectorActual) {
+        // Buscar el comentario en la base de datos
+        ComentarioManga comentario = comentarioDAO.buscarPorId(comentarioId);
+        if (comentario == null) {
+            return false; // No existe el comentario
+        }
+
+        // Validar que el lector actual sea el propietario
+        if (comentario.getLector() == null ||
+                comentario.getLector().getId() != lectorActual.getId()) {
+            return false; // No tiene permiso
+        }
+
+        // Llamar al DAO para eliminar
         return comentarioDAO.eliminar(comentarioId);
+    }
+    /// para eliminar bajo confirmacion
+    public boolean eliminarComentarioConConfirmacion(Lector lector, int idComentario, boolean confirmar) {
+        if (!confirmar) {
+            System.out.println("🟡 Eliminación cancelada por el usuario.");
+            return false;
+        }
+
+        try {
+            return comentarioDAO.eliminar(idComentario);
+        } catch (Exception e) {
+            System.err.println("❌ Error al eliminar comentario con confirmación: " + e.getMessage());
+            return false;
+        }
     }
 
     /**
