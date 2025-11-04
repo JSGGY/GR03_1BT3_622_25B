@@ -41,106 +41,88 @@ public class PublicarComentarioServlet extends HttpServlet {
     // Constructor por defecto requerido por servlet
     public PublicarComentarioServlet() {
     }
-
+    /**
+     * Procesa la acción de publicar o eliminar un comentario
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         String action = request.getParameter("action");
-        Lector lectorSesion = (Lector) request.getSession().getAttribute(SESSION_LECTOR);
-
-        // Validar que hay un lector autenticado
-        if (lectorSesion == null) {
-            request.getSession().setAttribute("error", "❌ Debes iniciar sesión para comentar.");
-            String referer = request.getHeader("Referer");
-            if (referer != null) {
-                response.sendRedirect(referer);
-            } else {
-                response.sendRedirect("index.jsp");
-            }
-            return;
-        }
+        Lector lectorSesion = obtenerLectorDeSesion(request, response);
+        if (lectorSesion == null) return;
 
         try {
-            int mangaId = Integer.parseInt(request.getParameter("mangaId"));
-            int scanId = Integer.parseInt(request.getParameter("scanId"));
+            int mangaId = obtenerParametroEntero(request, "mangaId");
+            int scanId = obtenerParametroEntero(request, "scanId");
 
-            // Obtener el lector desde la base de datos
             Lector lectorBD = lectorDAO.buscarPorId(lectorSesion.getId());
-            if (lectorBD == null) {
-                request.getSession().setAttribute("error", "❌ Error: lector no encontrado en la base de datos.");
-                response.sendRedirect("mangaInvitados?scanId=" + scanId);
-                return;
-            }
-
-            // Obtener el manga desde la base de datos
             Manga manga = mangaDAO.obtenerPorId(mangaId);
-            if (manga == null) {
-                request.getSession().setAttribute("error", "❌ Error: manga no encontrado.");
-                response.sendRedirect("mangaInvitados?scanId=" + scanId);
+
+            if (lectorBD == null || manga == null) {
+                manejarErrorEntidadNoEncontrada(request, response, lectorBD, manga, scanId);
                 return;
             }
 
-            // Procesar según la acción
-            if ("publicar".equals(action)) {
-                publicarComentario(request, response, lectorBD, manga, scanId);
-            } else if ("eliminar".equals(action)) {
-                eliminarComentario(request, response, scanId);
-            } else {
-                request.getSession().setAttribute("error", "❌ Acción no válida.");
-                response.sendRedirect("mangaInvitados?scanId=" + scanId);
-            }
+            procesarAccionComentario(request, response, action, lectorBD, manga, scanId);
 
         } catch (NumberFormatException e) {
-            request.getSession().setAttribute("error", "❌ Error: parámetros inválidos.");
-            String referer = request.getHeader("Referer");
-            if (referer != null) {
-                response.sendRedirect(referer);
-            } else {
-                response.sendRedirect("ingresoInvitado");
-            }
-        } catch (jakarta.persistence.PersistenceException e) {
-            // Capturar errores de persistencia (incluyendo conexión a BD)
-            System.err.println("❌ Error de persistencia/conexión a la base de datos: " + e.getMessage());
-            
-            // Preservar el comentario si se estaba intentando publicar
-            String textoComentario = request.getParameter("comentario");
-            if (textoComentario != null && !textoComentario.trim().isEmpty()) {
-                request.getSession().setAttribute("comentarioTemporal", textoComentario);
-            }
-            
-            // Determinar si es un error de conexión específicamente
-            String errorMsg = "❌ Error de conexión: No se pudo conectar con la base de datos. Por favor, intenta nuevamente en unos momentos.";
-            if (e.getMessage() != null && (e.getMessage().contains("Communications link failure") || 
-                                          e.getMessage().contains("Connection refused") ||
-                                          e.getMessage().contains("Unable to acquire JDBC Connection"))) {
-                errorMsg = "❌ Error de conexión: La base de datos no está disponible. Tu comentario no se ha perdido.";
-            }
-            
-            request.getSession().setAttribute("error", errorMsg);
-            String referer = request.getHeader("Referer");
-            if (referer != null) {
-                response.sendRedirect(referer);
-            } else {
-                response.sendRedirect("ingresoInvitado");
-            }
+            manejarErrorParametrosInvalidos(request, response);
         } catch (Exception e) {
-            System.err.println("❌ Error inesperado: " + e.getMessage());
-            
-            // Preservar el comentario en caso de cualquier error
-            String textoComentario = request.getParameter("comentario");
-            if (textoComentario != null && !textoComentario.trim().isEmpty()) {
-                request.getSession().setAttribute("comentarioTemporal", textoComentario);
-            }
-            
-            request.getSession().setAttribute("error", "❌ Error al procesar la solicitud. Por favor, intenta nuevamente.");
-            String referer = request.getHeader("Referer");
-            if (referer != null) {
-                response.sendRedirect(referer);
-            } else {
-                response.sendRedirect("ingresoInvitado");
-            }
+            manejarErrorGeneral(request, response, e);
         }
+    }
+
+    private Lector obtenerLectorDeSesion(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        Lector lector = (Lector) request.getSession().getAttribute(SESSION_LECTOR);
+        if (lector == null) {
+            request.getSession().setAttribute("error", "❌ Debes iniciar sesión para comentar.");
+            redirigirRefererOInicio(request, response);
+        }
+        return lector;
+    }
+
+    private int obtenerParametroEntero(HttpServletRequest request, String nombre) {
+        return Integer.parseInt(request.getParameter(nombre));
+    }
+
+    private void procesarAccionComentario(HttpServletRequest request, HttpServletResponse response, String action,
+                                          Lector lector, Manga manga, int scanId) throws IOException {
+        if ("publicar".equals(action)) {
+            publicarComentario(request, response, lector, manga, scanId);
+        } else if ("eliminar".equals(action)) {
+            eliminarComentario(request, response, scanId);
+        } else {
+            request.getSession().setAttribute("error", "❌ Acción no válida.");
+            redirigirAlOrigen(request, response, manga.getId(), scanId);
+        }
+    }
+
+    private void manejarErrorEntidadNoEncontrada(HttpServletRequest request, HttpServletResponse response,
+                                                 Lector lectorBD, Manga manga, int scanId) throws IOException {
+        if (lectorBD == null)
+            request.getSession().setAttribute("error", "❌ Error: lector no encontrado.");
+        else
+            request.getSession().setAttribute("error", "❌ Error: manga no encontrado.");
+
+        response.sendRedirect("mangaInvitados?scanId=" + scanId);
+    }
+
+    private void manejarErrorParametrosInvalidos(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        request.getSession().setAttribute("error", "❌ Error: parámetros inválidos.");
+        redirigirRefererOInicio(request, response);
+    }
+
+    private void manejarErrorGeneral(HttpServletRequest request, HttpServletResponse response, Exception e) throws IOException {
+        System.err.println("❌ Error inesperado: " + e.getMessage());
+        request.getSession().setAttribute("error", "❌ Error al procesar la solicitud.");
+        redirigirRefererOInicio(request, response);
+    }
+
+    private void redirigirRefererOInicio(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String referer = request.getHeader("Referer");
+        if (referer != null) response.sendRedirect(referer);
+        else response.sendRedirect("index.jsp");
     }
 
     /**

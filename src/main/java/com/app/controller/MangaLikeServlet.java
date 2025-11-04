@@ -33,13 +33,17 @@ public class MangaLikeServlet extends HttpServlet {
         HttpSession session = request.getSession();
         Lector lector = (Lector) session.getAttribute(SESSION_LECTOR);
 
-        if (lector == null) {
+        boolean lectorNoAutenticado = (lector == null);
+        boolean accionAgregarLike = "agregar".equals(action);
+        boolean parametrosMangaScanValidos = mangaIdParam != null && scanIdParam != null;
+
+        if (lectorNoAutenticado) {
             request.getSession().setAttribute("error", "Debes iniciar sesión para dar like");
             response.sendRedirect(request.getContextPath() + "/ingresoInvitado");
             return;
         }
 
-        if ("agregar".equals(action) && mangaIdParam != null && scanIdParam != null) {
+        if (accionAgregarLike && parametrosMangaScanValidos) {
             try {
                 int mangaId = Integer.parseInt(mangaIdParam);
                 int scanId = Integer.parseInt(scanIdParam);
