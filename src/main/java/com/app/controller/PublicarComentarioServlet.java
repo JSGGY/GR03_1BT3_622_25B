@@ -239,7 +239,8 @@ public class PublicarComentarioServlet extends HttpServlet {
             try {
                 int mangaId = Integer.parseInt(request.getParameter("mangaId"));
                 List<ComentarioManga> comentarios = comentarioService.obtenerComentariosDeMangaPorId(mangaId);
-                
+
+                // Forward a JSP para mostrar comentarios
                 request.setAttribute("comentarios", comentarios);
                 request.getRequestDispatcher("/manga-invitados.jsp").forward(request, response);
                 
