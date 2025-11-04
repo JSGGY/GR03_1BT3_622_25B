@@ -171,17 +171,17 @@ body {
         margin: 20px;
         min-width: auto;
     }
-    
+
     .auth-form h2 {
         font-size: 1.8em;
         margin-bottom: 25px;
     }
-    
+
     .form-group input {
         padding: 12px 15px;
         font-size: 16px; /* Evita zoom en iOS */
     }
-    
+
     .btn-primary {
         padding: 12px;
         font-size: 1em;
@@ -205,7 +205,7 @@ body {
     color: #ffffff;
     min-height: calc(100vh - 40px);
     overflow-y: auto;
-    
+
     /* Responsive design */
     width: calc(100% - 40px);
 }
@@ -235,7 +235,7 @@ body {
         flex-direction: column;
         text-align: center;
     }
-    
+
     .dashboard-header h1 {
         font-size: 2em;
     }
@@ -258,7 +258,7 @@ body {
         width: 100%;
         justify-content: center;
     }
-    
+
     .btn-primary, .btn-secondary {
         flex: 1;
         min-width: 120px;
@@ -471,11 +471,11 @@ body {
         width: 95%;
         margin: 20px;
     }
-    
+
     .modal-header {
         padding: 15px 20px;
     }
-    
+
     .modal form {
         padding: 20px;
     }
@@ -603,7 +603,7 @@ body {
     .card-actions {
         flex-direction: column;
     }
-    
+
     .card-actions button {
         width: 100%;
     }
@@ -696,12 +696,12 @@ body {
         flex-direction: column;
         text-align: center;
     }
-    
+
     .scan-info {
         flex-direction: column;
         text-align: center;
     }
-    
+
     .scan-details h1 {
         font-size: 1.5em;
     }
@@ -825,3 +825,76 @@ body {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
 }
 
+.likes-counter {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #ff6b6b;
+    font-size: 14px;
+    margin-top: 8px;
+    padding: 5px 10px;
+    background: rgba(255, 107, 107, 0.1);
+    border-radius: 20px;
+    width: fit-content;
+}
+
+.likes-counter .s-icon {
+    font-size: 16px;
+}
+
+.likes-counter .count {
+    font-weight: 600;
+}
+
+.mangas-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.mangas-header h2 {
+    margin: 0;
+}
+
+.btn-ordenar {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn-ordenar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-ordenar.active {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.btn-ordenar .icon {
+    font-size: 16px;
+}
+
+.ordenado-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    background: rgba(56, 239, 125, 0.2);
+    color: #38ef7d;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 10px;
+}

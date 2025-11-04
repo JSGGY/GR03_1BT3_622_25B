@@ -10,7 +10,7 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.TypedQuery;
 
 public class MangaDAO {
-    
+
     /**
      * Obtiene el EntityManagerFactory de manera lazy a través del provider.
      * Esto permite que los tests configuren una unidad de persistencia diferente.
@@ -18,23 +18,23 @@ public class MangaDAO {
     private EntityManagerFactory getEmf() {
         return EntityManagerFactoryProvider.getEntityManagerFactory();
     }
-    
+
     public boolean guardar(Manga manga) {
         EntityManager em = getEmf().createEntityManager();
         try {
             em.getTransaction().begin();
-            
+
             if (manga.getId() == 0) {
                 em.persist(manga);
             } else {
                 em.merge(manga);
             }
-            
+
             em.getTransaction().commit();
             return true;
         } catch (Exception e) {
             System.err.println("ERROR MangaDAO: Falló al guardar manga '" + manga.getTitulo() + "': " + e.getMessage());
-            
+
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
             }
@@ -43,25 +43,37 @@ public class MangaDAO {
             em.close();
         }
     }
-    
+
     public Manga buscarPorId(int id) {
         EntityManager em = getEmf().createEntityManager();
         try {
-            return em.find(Manga.class, id);
+            Manga manga = em.find(Manga.class, id);
+            if (manga != null) {
+                // Sincronizar likes desde la BD
+                manga.setTotalLikes(manga.getTotalLikesDB());
+            }
+            return manga;
         } finally {
             em.close();
         }
     }
-    
+
     public List<Manga> buscarPorScan(Scan scan) {
         EntityManager em = getEmf().createEntityManager();
         try {
             TypedQuery<Manga> query = em.createQuery(
-                "SELECT DISTINCT m FROM Manga m LEFT JOIN FETCH m.capitulos WHERE m.scan = :scan ORDER BY m.titulo", 
-                Manga.class
+                    "SELECT DISTINCT m FROM Manga m LEFT JOIN FETCH m.capitulos WHERE m.scan = :scan ORDER BY m.titulo",
+                    Manga.class
             );
             query.setParameter("scan", scan);
-            return query.getResultList();
+            List<Manga> mangas = query.getResultList();
+
+            // Sincronizar likes para cada manga
+            for (Manga manga : mangas) {
+                manga.setTotalLikes(manga.getTotalLikesDB());
+            }
+
+            return mangas;
         } finally {
             em.close();
         }
@@ -71,11 +83,18 @@ public class MangaDAO {
         EntityManager em = getEmf().createEntityManager();
         try {
             TypedQuery<Manga> query = em.createQuery(
-                "SELECT DISTINCT m FROM Manga m LEFT JOIN FETCH m.capitulos WHERE m.scan.id = :scanId ORDER BY m.titulo",
-                Manga.class
+                    "SELECT DISTINCT m FROM Manga m LEFT JOIN FETCH m.capitulos WHERE m.scan.id = :scanId ORDER BY m.titulo",
+                    Manga.class
             );
             query.setParameter("scanId", scanId);
-            return query.getResultList();
+            List<Manga> mangas = query.getResultList();
+
+            // Sincronizar likes para cada manga
+            for (Manga manga : mangas) {
+                manga.setTotalLikes(manga.getTotalLikesDB());
+            }
+
+            return mangas;
         } finally {
             em.close();
         }
@@ -84,7 +103,12 @@ public class MangaDAO {
     public Manga obtenerPorId(int id) {
         EntityManager em = getEmf().createEntityManager();
         try {
-            return em.find(Manga.class, id);
+            Manga manga = em.find(Manga.class, id);
+            if (manga != null) {
+                // Sincronizar likes desde la BD
+                manga.setTotalLikes(manga.getTotalLikesDB());
+            }
+            return manga;
         } finally {
             em.close();
         }
@@ -94,7 +118,7 @@ public class MangaDAO {
      * Elimina un manga de la base de datos.
      * Gracias a CascadeType.ALL en la relación OneToMany con Capitulo,
      * todos los capítulos asociados se eliminarán automáticamente.
-     * 
+     *
      * @param id ID del manga a eliminar
      * @return true si se eliminó correctamente, false si no existe o hubo error
      */
@@ -129,31 +153,31 @@ public class MangaDAO {
             em.close();
         }
     }
-    
+
     public boolean existeTituloEnScan(String titulo, int scanId) {
         EntityManager em = getEmf().createEntityManager();
         try {
             return em.createQuery(
-                "SELECT COUNT(m) FROM Manga m WHERE m.titulo = :titulo AND m.scan.id = :scanId",
-                Long.class)
-                .setParameter("titulo", titulo)
-                .setParameter("scanId", scanId)
-                .getSingleResult() > 0;
+                            "SELECT COUNT(m) FROM Manga m WHERE m.titulo = :titulo AND m.scan.id = :scanId",
+                            Long.class)
+                    .setParameter("titulo", titulo)
+                    .setParameter("scanId", scanId)
+                    .getSingleResult() > 0;
         } finally {
             em.close();
         }
     }
-    
+
     public boolean existeTituloEnScanExceptoId(String titulo, int scanId, int mangaId) {
         EntityManager em = getEmf().createEntityManager();
         try {
             return em.createQuery(
-                "SELECT COUNT(m) FROM Manga m WHERE m.titulo = :titulo AND m.scan.id = :scanId AND m.id != :mangaId",
-                Long.class)
-                .setParameter("titulo", titulo)
-                .setParameter("scanId", scanId)
-                .setParameter("mangaId", mangaId)
-                .getSingleResult() > 0;
+                            "SELECT COUNT(m) FROM Manga m WHERE m.titulo = :titulo AND m.scan.id = :scanId AND m.id != :mangaId",
+                            Long.class)
+                    .setParameter("titulo", titulo)
+                    .setParameter("scanId", scanId)
+                    .setParameter("mangaId", mangaId)
+                    .getSingleResult() > 0;
         } finally {
             em.close();
         }

@@ -14,11 +14,13 @@ import static com.app.constants.AppConstants.ROUTE_DASHBOARD;
 import static com.app.constants.AppConstants.ROUTE_MANGA;
 import static com.app.constants.AppConstants.SESSION_ADMIN_SCAN;
 import com.app.dao.MangaDAO;
+import com.app.dao.MangaLikeDAO;
 import com.app.dao.ScanDAO;
 import com.app.model.AdminScan;
 import com.app.model.EstadoManga;
 import com.app.model.Manga;
 import com.app.model.Scan;
+import com.app.service.MangaLikeService;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -29,15 +31,16 @@ import jakarta.servlet.http.Part;
 
 @WebServlet("/manga")
 @MultipartConfig(
-    fileSizeThreshold = 1024 * 1024 * 2,
-    maxFileSize = 1024 * 1024 * 10,
-    maxRequestSize = 1024 * 1024 * 50
+        fileSizeThreshold = 1024 * 1024 * 2,
+        maxFileSize = 1024 * 1024 * 10,
+        maxRequestSize = 1024 * 1024 * 50
 )
 public class MangaServlet extends BaseAuthenticatedServlet {
     private static final long serialVersionUID = 1L;
 
     private final MangaDAO mangaDAO = new MangaDAO();
     private final ScanDAO scanDAO = new ScanDAO();
+    private final MangaLikeService mangaLikeService = new MangaLikeService(new MangaDAO(), new MangaLikeDAO());
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -77,6 +80,7 @@ public class MangaServlet extends BaseAuthenticatedServlet {
 
     /**
      * Obtiene y muestra la información de mangas para un scan específico.
+     * Soporta ordenamiento por likes si se especifica el parámetro "ordenarPorLikes".
      */
     private void obtenerInfo(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -99,8 +103,25 @@ public class MangaServlet extends BaseAuthenticatedServlet {
             Scan scan = scanDAO.buscarPorId(scanId);
             if (!validateScanOwnership(adminScan, scan, request, response)) return;
 
-            // Obtener mangas del scan
-            List<Manga> mangas = mangaDAO.buscarPorScanId(scanId);
+            // Verificar si se debe ordenar por likes
+            String ordenarPorLikes = request.getParameter("ordenarPorLikes");
+            List<Manga> mangas;
+
+            if ("true".equals(ordenarPorLikes)) {
+                // Obtener mangas ordenados por likes (descendente)
+                mangas = mangaLikeService.obtenerMangasOrdenadosPorLikes(scanId);
+                request.setAttribute("ordenadoPorLikes", true);
+            } else {
+                // Obtener mangas en orden normal
+                mangas = mangaDAO.buscarPorScanId(scanId);
+                request.setAttribute("ordenadoPorLikes", false);
+            }
+
+            // Sincronizar likes desde el servicio para cada manga
+            for (Manga manga : mangas) {
+                int likesActualizados = mangaLikeService.obtenerTotalLikes(manga.getId());
+                manga.setTotalLikes(likesActualizados);
+            }
 
             // Establecer atributos
             request.setAttribute("scan", scan);
@@ -119,7 +140,7 @@ public class MangaServlet extends BaseAuthenticatedServlet {
      * Crea un nuevo manga en el scan especificado.
      */
     private void crearManga(HttpServletRequest request, HttpServletResponse response,
-            AdminScan adminScan) throws ServletException, IOException {
+                            AdminScan adminScan) throws ServletException, IOException {
 
         String scanIdParam = request.getParameter(PARAM_SCAN_ID);
 
@@ -137,17 +158,17 @@ public class MangaServlet extends BaseAuthenticatedServlet {
                 obtenerInfo(request, response);
                 return;
             }
-            
+
             // Obtener otros parámetros
             String descripcion = request.getParameter("descripcion");
             String estadoParam = request.getParameter("estado");
-            
+
             // Crear nuevo manga
             Manga nuevoManga = new Manga();
             nuevoManga.setTitulo(titulo);
             nuevoManga.setDescripcion(descripcion);
             nuevoManga.setScan(scan);
-            
+
             // Establecer estado
             if (estadoParam != null) {
                 try {
@@ -158,13 +179,16 @@ public class MangaServlet extends BaseAuthenticatedServlet {
             } else {
                 nuevoManga.setEstado(EstadoManga.EN_PROGRESO);
             }
-            
+
             // Manejar subida de imagen de portada
             procesarImagenPortada(request, nuevoManga);
-            
+
+            // Inicializar likes en 0
+            nuevoManga.setTotalLikes(0);
+
             // Guardar manga
             boolean guardado = mangaDAO.guardar(nuevoManga);
-            
+
             if (!guardado) {
                 System.err.println("ERROR: Falló al guardar el manga: " + titulo);
                 request.setAttribute("error", "Error al crear el manga");
@@ -178,11 +202,15 @@ public class MangaServlet extends BaseAuthenticatedServlet {
         }
     }
 
+    /**
+     * Edita un manga existente.
+     * Preserva los likes actuales del manga durante la edición.
+     */
     private void editarManga(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         AdminScan adminScan = (AdminScan) request.getSession().getAttribute("adminScan");
-        
+
         try {
             Manga manga = obtenerMangaSeguro(request, adminScan);
             if (manga == null) {
@@ -190,15 +218,18 @@ public class MangaServlet extends BaseAuthenticatedServlet {
                 return;
             }
 
+            // Obtener likes actuales antes de editar
+            int likesActuales = mangaLikeService.obtenerTotalLikes(manga.getId());
+
             String titulo = request.getParameter("titulo");
             String descripcion = request.getParameter("descripcion");
             String estadoParam = request.getParameter("estado");
-            
+
             if (titulo != null && !titulo.trim().isEmpty()) {
                 manga.setTitulo(titulo);
             }
             manga.setDescripcion(descripcion);
-            
+
             // Establecer estado
             if (estadoParam != null) {
                 try {
@@ -207,13 +238,16 @@ public class MangaServlet extends BaseAuthenticatedServlet {
                     // Mantener el estado actual si es inválido
                 }
             }
-            
+
             // Manejar actualización de imagen de portada
             procesarImagenPortada(request, manga);
-            
+
+            // Preservar los likes existentes
+            manga.setTotalLikes(likesActuales);
+
             // Actualizar manga
             boolean actualizado = mangaDAO.guardar(manga);
-            
+
             if (!actualizado) {
                 request.setAttribute("error", "Error al actualizar el manga");
             }
@@ -226,24 +260,26 @@ public class MangaServlet extends BaseAuthenticatedServlet {
         }
     }
 
+    /**
+     * Elimina un manga y sus relaciones asociadas (capítulos, likes, etc.)
+     */
     private void eliminarManga(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
+
         AdminScan adminScan = (AdminScan) request.getSession().getAttribute("adminScan");
-        
+
         try {
             Manga manga = obtenerMangaSeguro(request, adminScan);
             if (manga == null) {
                 response.sendRedirect(request.getContextPath() + ROUTE_DASHBOARD);
                 return;
             }
-            
+
             int scanId = manga.getScan().getId();
 
-            // Eliminar manga
+            // Eliminar manga (los likes se eliminan en cascada automáticamente)
             boolean eliminado = mangaDAO.eliminar(manga.getId());
-            // boolean eliminado = mangaDAO.eliminar(mangaId);
-            
+
             if (!eliminado) {
                 request.setAttribute("error", "Error al eliminar el manga");
             }
@@ -256,39 +292,37 @@ public class MangaServlet extends BaseAuthenticatedServlet {
         }
     }
 
+    /**
+     * Procesa la imagen de portada subida para un manga.
+     * Valida el tipo y tamaño del archivo antes de almacenarlo en BLOB.
+     */
     private void procesarImagenPortada(HttpServletRequest request, Manga manga) {
         try {
             Part filePart = request.getPart("imagenPortada");
-            
+
             if (filePart != null) {
                 long fileSize = filePart.getSize();
                 String fileName = filePart.getSubmittedFileName();
                 String mimeType = filePart.getContentType();
-                
+
                 if (fileSize > 0) {
                     if (fileName != null && !fileName.trim().isEmpty()) {
                         fileName = Paths.get(fileName).getFileName().toString();
-                        
-                        // Validar que sea una imagen válida
+
+                        // Validar que sea una imagen valida
                         if (com.app.util.ImagenUtil.validarImagen(mimeType, fileSize)) {
                             // Leer los bytes de la imagen
                             try (InputStream inputStream = filePart.getInputStream()) {
                                 byte[] imageBytes = inputStream.readAllBytes();
-                                
+
                                 // Verificar que se leyeron bytes
                                 if (imageBytes != null && imageBytes.length > 0) {
                                     // Guardar en BLOB
                                     manga.setPortadaBlob(imageBytes);
                                     manga.setPortadaTipo(mimeType);
                                     manga.setPortadaNombre(fileName);
-                                    
-                                    System.out.println("DEBUG: Imagen procesada - " + fileName + " (" + imageBytes.length + " bytes)");
-                                } else {
-                                    System.err.println("ERROR: No se pudieron leer bytes de la imagen");
                                 }
                             }
-                        } else {
-                            System.err.println("ERROR: Imagen inválida - " + fileName + " (Tipo: " + mimeType + ", Tamaño: " + fileSize + " bytes)");
                         }
                     }
                 }
@@ -298,16 +332,24 @@ public class MangaServlet extends BaseAuthenticatedServlet {
         }
     }
 
+    /**
+     * Obtiene un manga validando que pertenezca al AdminScan autenticado.
+     * Sincroniza los likes actuales desde la base de datos.
+     *
+     * @return Manga si existe y pertenece al admin, null en caso contrario
+     */
     private Manga obtenerMangaSeguro(HttpServletRequest request, AdminScan adminScan) {
         try {
             int mangaId = Integer.parseInt(request.getParameter("mangaId"));
             Manga manga = mangaDAO.buscarPorId(mangaId);
 
             if (manga != null && manga.getScan().getCreadoPor().getId() == adminScan.getId()) {
+                // Sincronizar likes usando el servicio
+                int likesActualizados = mangaLikeService.obtenerTotalLikes(manga.getId());
+                manga.setTotalLikes(likesActualizados);
                 return manga;
             }
         } catch (NumberFormatException ignored) {}
         return null;
     }
-
 }
