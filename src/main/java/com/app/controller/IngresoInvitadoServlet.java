@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.List;
 
 import static com.app.constants.AppConstants.SESSION_LECTOR;
+
+import com.app.dao.MangaDAO;
 import com.app.dao.ScanDAO;
 import com.app.model.Lector;
 import com.app.model.Manga;
@@ -21,6 +23,7 @@ import jakarta.servlet.http.HttpSession;
 public class IngresoInvitadoServlet extends HttpServlet {
 
     private final ScanDAO scanDAO = new ScanDAO();
+    private final MangaDAO mangaDAO = new MangaDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -37,7 +40,7 @@ public class IngresoInvitadoServlet extends HttpServlet {
             request.setAttribute("lector", lector);
             request.setAttribute("isLectorAutenticado", true);
 
-            // ✅ Cargar mangas visitados recientemente
+            // Cargar mangas visitados recientemente
             HistorialVisitasService historialService = new HistorialVisitasService();
             List<Manga> mangasRecientes = historialService.obtenerMangasVisitadosRecientes(lector);
 
@@ -61,6 +64,16 @@ public class IngresoInvitadoServlet extends HttpServlet {
             System.out.println("  - " + scan.getNombre() + " (Mangas: " + scan.getMangas().size() + ")");
         }
         request.setAttribute("scans", scans);
+
+        // Cargar los mangas más populares (según totalLikes)
+        List<Manga> mangasPopulares = mangaDAO.obtenerTopMangasPorLikes(10);
+        if (mangasPopulares != null && !mangasPopulares.isEmpty()) {
+            System.out.println("DEBUG: Se encontraron " + mangasPopulares.size() + " mangas populares.");
+        } else {
+            System.out.println("DEBUG: No hay mangas populares registrados.");
+        }
+        request.setAttribute("mangasPopulares", mangasPopulares);
+
 
         // Redirigir a la página de dashboard para invitados
         request.getRequestDispatcher("dashboard-invitados.jsp").forward(request, response);

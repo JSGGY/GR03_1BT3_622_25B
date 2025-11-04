@@ -12,6 +12,7 @@
             com.app.model.Lector lector = (com.app.model.Lector) request.getAttribute("lector");
             java.util.List<com.app.model.Scan> scans = (java.util.List<com.app.model.Scan>) request.getAttribute("scans");
             java.util.List<com.app.model.Manga> mangasRecientes = (java.util.List<com.app.model.Manga>) request.getAttribute("mangasRecientes");
+            java.util.List<com.app.model.Manga> mangasPopulares = (java.util.List<com.app.model.Manga>) request.getAttribute("mangasPopulares");
 
             String titulo = "Bienvenido Invitado";
             if (isLectorAutenticado != null && isLectorAutenticado && lector != null) {
@@ -52,7 +53,7 @@
                     <p><%= manga.getDescripcion() != null ? manga.getDescripcion() : "Sin descripción disponible." %></p>
                 </div>
                 <div class="card-actions">
-                    <a href="mangaDetalle?mangaId=<%= manga.getId() %>&scanId=<%= manga.getScan().getId() %>" class="btn-primary btn-small">Ver Detalle</a>
+                    <a href="mangaDetalle?mangaId=<%= manga.getId() %>&scanId=<%= manga.getScan().getId() %>" class="btn-primary btn-small">Ver Manga</a>
                 </div>
             </div>
             <% } %>
@@ -60,6 +61,37 @@
     </div>
     <% } %>
 
+    <%-- ======================== SECCIÓN DE MANGAS MÁS POPULARES ======================== --%>
+    <% if (mangasPopulares != null && !mangasPopulares.isEmpty()) { %>
+    <div class="populares-container">
+        <h2>🔥 Más populares</h2> <%-- Para una actualización: MANGAS MÁS POPULARES --%>
+        <div class="scans-grid">
+            <% for (com.app.model.Manga manga : mangasPopulares) {
+                String imagenUrl = "imagen/manga/" + manga.getId();
+            %>
+            <div class="scan-card">
+                <div class="card-image">
+                    <img src="<%= imagenUrl %>"
+                         alt="<%= manga.getTitulo() %>"
+                         onerror="this.src='images/default-manga.svg'">
+                </div>
+                <div class="card-header">
+                    <h3><%= manga.getTitulo() %></h3>
+                </div>
+                <div class="card-body">
+                    <p><%= manga.getDescripcion() != null ? manga.getDescripcion() : "Sin descripción disponible." %></p>
+                    <div class="card-stats">
+                        <span>❤ <%= manga.getTotalLikes() %> likes</span>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <a href="mangaDetalle?mangaId=<%= manga.getId() %>&scanId=<%= manga.getScan().getId() %>" class="btn-primary btn-small">Ver Manga</a>
+                </div>
+            </div>
+            <% } %>
+        </div>
+    </div>
+    <% } %>
     <%-- ======================== SECCIÓN DE SCANS DISPONIBLES ======================== --%>
     <div class="scans-container">
         <h2>🏷️ Scans Disponibles</h2>

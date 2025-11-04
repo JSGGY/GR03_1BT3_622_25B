@@ -154,6 +154,39 @@ public class MangaDAO {
         }
     }
 
+    /**
+     * Obtiene los mangas más populares según su total de likes.
+     * Devuelve una lista ordenada descendentemente por totalLikes (máximo 10 registros).
+     *
+     * @param limit cantidad máxima de mangas a devolver
+     * @return lista de mangas populares
+     */
+    public List<Manga> obtenerTopMangasPorLikes(int limit) {
+        EntityManager em = getEmf().createEntityManager();
+        try {
+            TypedQuery<Manga> query = em.createQuery(
+                    "SELECT m FROM Manga m ORDER BY m.totalLikesDB DESC",
+                    Manga.class
+            );
+            query.setMaxResults(limit);
+            List<Manga> populares = query.getResultList();
+
+            // Sincronizar likes desde la BD (coherencia con otros métodos)
+            for (Manga manga : populares) {
+                manga.setTotalLikes(manga.getTotalLikesDB());
+            }
+
+            return populares;
+        } catch (Exception e) {
+            System.err.println("ERROR MangaDAO: Falló al obtener mangas populares → " + e.getMessage());
+            e.printStackTrace();
+            return List.of();
+        } finally {
+            em.close();
+        }
+    }
+
+
     public boolean existeTituloEnScan(String titulo, int scanId) {
         EntityManager em = getEmf().createEntityManager();
         try {
