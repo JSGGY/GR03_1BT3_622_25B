@@ -128,7 +128,8 @@
                             usuarioYaDioLike = likeService.usuarioYaDioLike(manga.getId(), lector.getId());
                         }
             %>
-            <div class="manga-card">
+            <div class="manga-card" onclick="window.location.href='mangaDetalle?mangaId=<%= manga.getId() %>&scanId=<%= scan.getId() %>'" style="cursor: pointer; position: relative">
+            <!--HACER QUE SE MANDE A LA INFO DEL MANGA -->
                 <div class="card-image">
                     <img src="<%= imagenPortada %>"
                          alt="<%= manga.getTitulo() %>"
@@ -181,7 +182,8 @@
                         <% } %>
                     </div>
                 </div>
-                <div class="card-actions">
+                <!-- PAra evitar que active desde cualquier boton -->
+                   <div class="card-actions" onclick="event.stopPropagation();">
                     <a href="mostrarCapitulos?mangaId=<%= manga.getId() %>&scanId=<%= scan.getId() %>"
                        class="btn-primary btn-small">Leer Capítulos</a>
                     <% if (isLectorAutenticado != null && isLectorAutenticado && lector != null) { %>
