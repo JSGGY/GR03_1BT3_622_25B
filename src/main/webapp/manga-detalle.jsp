@@ -318,6 +318,7 @@
                 <div class="comentario-form">
                     <h3 style="color: #00d4ff; margin-bottom: 15px;">Escribe tu comentario</h3>
                     <form action="comentarioManga" method="post">
+
                         <input type="hidden" name="action" value="publicar">
                         <input type="hidden" name="mangaId" value="<%= manga.getId() %>">
                         <input type="hidden" name="scanId" value="<%= scan.getId() %>">
