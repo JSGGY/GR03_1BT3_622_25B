@@ -1,0 +1,69 @@
+# Archivos de Git
+.git
+.gitignore
+.gitattributes
+
+# Archivos de IDE
+.vscode
+.idea
+*.iml
+.settings
+.project
+.classpath
+
+# Archivos de construcción locales
+target/
+build/
+dist/
+out/
+
+# Archivos de Docker (no necesarios dentro de la imagen)
+Dockerfile
+docker-compose.yaml
+docker-compose.hub.yaml
+.dockerignore
+
+# Archivos de base de datos (no necesarios en la imagen de la app)
+db-init/
+
+# Scripts de deployment
+push-to-dockerhub.sh
+push-to-dockerhub.ps1
+
+# Documentación (no necesaria en la imagen)
+*.md
+README*.md
+INSTRUCCIONES*.md
+LICENSE
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Archivos temporales
+*.tmp
+*.temp
+.tmp/
+
+# Archivos de Node.js (si los hay)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Archivos de backup
+*.backup
+*.bak
+*.old
+
+# Archivos de prueba que no deben estar en producción
+.env.local
+.env.test
+test-results/
+coverage/

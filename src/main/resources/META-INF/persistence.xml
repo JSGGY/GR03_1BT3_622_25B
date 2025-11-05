@@ -25,10 +25,14 @@
 
         <properties>
             <!-- PROPIEDADES PARA JAKARTA EE -->
+            <!-- En desarrollo local (sin Docker) -->
             <property name="jakarta.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
-            <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/adminscan?useSSL=false&amp;maxAllowedPacket=67108864"/>
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/adminscan?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;maxAllowedPacket=67108864"/>
             <property name="jakarta.persistence.jdbc.user" value="root"/>
-            <property name="jakarta.persistence.jdbc.password" value=""/>
+            <property name="jakarta.persistence.jdbc.password" value="root"/>
+            
+            <!-- Nota: En Docker, estas propiedades son sobrescritas por EntityManagerFactoryProvider 
+                 usando las variables de entorno DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD -->
 
             <property name="hibernate.dialect" value="org.hibernate.dialect.MySQL8Dialect"/>
             <property name="hibernate.hbm2ddl.auto" value="update"/>

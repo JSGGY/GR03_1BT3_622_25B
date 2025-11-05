@@ -1,5 +1,8 @@
 package com.app.dao;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
@@ -9,6 +12,8 @@ import jakarta.persistence.Persistence;
  * 
  * En tests, el archivo persistence.xml en src/test/resources tiene prioridad
  * sobre el de src/main/resources, por lo que automáticamente usa H2 en memoria.
+ * 
+ * En Docker, lee las variables de entorno para configurar la conexión a la BD.
  */
 public class EntityManagerFactoryProvider {
     
@@ -20,10 +25,35 @@ public class EntityManagerFactoryProvider {
      * Se inicializa lazy (solo cuando se necesita).
      * 
      * En tests usa automáticamente H2 gracias a la prioridad del classpath.
+     * En Docker, sobrescribe la configuración con variables de entorno.
      */
     public static synchronized EntityManagerFactory getEntityManagerFactory() {
         if (emf == null || !emf.isOpen()) {
-            emf = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
+            Map<String, String> properties = new HashMap<>();
+            
+            // Lee variables de entorno para Docker
+            String dbHost = System.getenv("DB_HOST");
+            String dbPort = System.getenv("DB_PORT");
+            String dbName = System.getenv("DB_NAME");
+            String dbUser = System.getenv("DB_USER");
+            String dbPassword = System.getenv("DB_PASSWORD");
+            
+            // Si existen variables de entorno, sobrescribe la configuración
+            if (dbHost != null && dbPort != null && dbName != null) {
+                String jdbcUrl = String.format(
+                    "jdbc:mysql://%s:%s/%s?useSSL=false&allowPublicKeyRetrieval=true&maxAllowedPacket=67108864",
+                    dbHost, dbPort, dbName
+                );
+                properties.put("jakarta.persistence.jdbc.url", jdbcUrl);
+                properties.put("jakarta.persistence.jdbc.user", dbUser != null ? dbUser : "root");
+                properties.put("jakarta.persistence.jdbc.password", dbPassword != null ? dbPassword : "");
+                
+                System.out.println("🐳 Using Docker environment variables for database connection");
+                System.out.println("📡 Connecting to: " + jdbcUrl);
+            }
+            
+            // Crea el EntityManagerFactory con las propiedades (vacío si no hay variables de entorno)
+            emf = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, properties);
         }
         return emf;
     }
