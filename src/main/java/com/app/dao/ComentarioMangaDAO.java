@@ -79,7 +79,11 @@ public class ComentarioMangaDAO {
             query.setParameter("mangaId", mangaId);
             return query.getResultList();
         } finally {
+            /**
+             *Comprobacion de jenkinks
+             */
             em.close();
+
         }
     }
 
